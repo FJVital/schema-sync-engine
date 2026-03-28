@@ -5,3 +5,4 @@ google-generativeai
 sqlalchemy
 python-jose[cryptography]
 python-multipart
+bcrypt
