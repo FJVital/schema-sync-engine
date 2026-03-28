@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+stripe
+google-generativeai
+sqlalchemy
+python-jose[cryptography]
+python-multipart

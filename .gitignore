@@ -1,0 +1,15 @@
+# Python caches
+__pycache__/
+*.pyc
+
+# Local Databases
+*.sqlite3
+*.db
+
+# Processed Client Files
+vault_*.csv
+input.csv
+output.csv
+
+# Environment Variables (Secrets)
+.env

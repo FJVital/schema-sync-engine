@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schema-Sync Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px;}
+        .container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 450px; transition: width 0.4s ease-in-out; position: relative; padding-bottom: 60px; }
+        h1 { color: #333; font-size: 24px; margin-bottom: 5px; }
+        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+        
+        /* Instructions Styling */
+        .instructions-box { background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; text-align: left; margin-bottom: 25px; border-radius: 4px; font-size: 13px; color: #444; line-height: 1.6; }
+        .instructions-box strong { color: #222; display: block; margin-bottom: 8px; font-size: 14px; }
+        .instructions-box ol { margin: 0; padding-left: 20px; }
+        .instructions-box li span { font-weight: bold; color: #007bff; }
+
+        .input-field { width: 90%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .upload-area { border: 2px dashed #007bff; border-radius: 5px; padding: 30px; cursor: pointer; transition: background 0.3s; margin-bottom: 20px; display: block; }
+        .upload-area:hover { background: #f0f8ff; }
+        input[type="file"] { display: none; }
+        button { background: #007bff; color: white; border: none; padding: 12px 25px; border-radius: 5px; font-size: 16px; cursor: pointer; transition: background 0.3s; width: 100%; margin-bottom: 10px;}
+        button:hover { background: #0056b3; }
+        button:disabled { background: #cccccc; cursor: not-allowed; }
+        .hidden { display: none !important; }
+        #status { margin-top: 15px; font-weight: bold; color: #333; }
+        
+        /* NEW DYNAMIC SPINNER */
+        .loader-container { display: flex; flex-direction: column; align-items: center; margin-top: 15px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .quote-header { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #635bff; text-align: left; }
+        .table-wrapper { max-height: 300px; overflow-y: auto; overflow-x: auto; border: 1px solid #dee2e6; border-radius: 5px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; white-space: nowrap; }
+        th, td { padding: 8px 12px; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #f8f9fa; position: sticky; top: 0; z-index: 1; box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); color: #495057;}
+        
+        .stripe-btn { background: #635bff; font-weight: bold; }
+        .stripe-btn:hover { background: #4b45c6; }
+
+        .support-link { position: absolute; bottom: 20px; left: 0; width: 100%; text-align: center; font-size: 12px; color: #888; }
+        .support-link a { color: #007bff; text-decoration: none; font-weight: bold; }
+        .support-link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+    <h1>Schema-Sync Engine</h1>
+    <p id="subtitle">Authenticate to access the pipeline.</p>
+    
+    <div class="instructions-box">
+        <strong>How the Engine Works:</strong>
+        <ol>
+            <li><span>Upload:</span> Select your raw supplier CSV file.</li>
+            <li><span>Check:</span> Review your dynamic price quote and 20-row data preview.</li>
+            <li><span>Authorize:</span> Proceed to our secure billing gateway.</li>
+            <li><span>Pay:</span> Complete the transaction via Stripe.</li>
+            <li><span>Download:</span> Instantly access your formatted Shopify CSV.</li>
+        </ol>
+    </div>
+
+    <div id="login-section">
+        <input type="email" id="email" class="input-field" placeholder="Email Address" value="fjvital@gmail.com">
+        <input type="password" id="password" class="input-field" placeholder="Password" value="$Fortune11$">
+        <button id="login-btn" onclick="performLogin()">Secure Login</button>
+    </div>
+
+    <div id="upload-section" class="hidden">
+        <label class="upload-area">
+            <span id="file-name">Click to select raw CSV file</span>
+            <input type="file" id="file-input" accept=".csv" onchange="fileSelected()">
+        </label>
+        <button id="quote-btn" disabled onclick="generateQuote()">Process & Preview Data</button>
+    </div>
+
+    <div id="checkout-section" class="hidden">
+        <div class="quote-header">
+            <div>
+                <h3 style="margin: 0 0 5px 0; color: #333;">Pipeline Complete</h3>
+                <span style="font-size: 14px; color: #666;">Showing first 20 rows of <b id="row-count">0</b> total rows.</span>
+            </div>
+            <div style="text-align: right;">
+                <h2 style="margin: 0; color: #635bff;">$<span id="total-price">0.00</span></h2>
+            </div>
+        </div>
+        
+        <div class="table-wrapper">
+            <table id="preview-table">
+                <thead id="preview-head"></thead>
+                <tbody id="preview-body"></tbody>
+            </table>
+        </div>
+
+        <button id="pay-btn" class="stripe-btn" onclick="payWithStripe()">Authorize Payment via Stripe</button>
+    </div>
+
+    <div id="download-section" class="hidden">
+        <div class="quote-header" style="border-left: 5px solid #28a745; justify-content: center; text-align: center;">
+            <div>
+                <h3 style="color: #28a745; margin: 0 0 5px 0;">Payment Verified</h3>
+                <p style="margin: 0;">Your Shopify CSV is unlocked.</p>
+            </div>
+        </div>
+        <button id="download-btn" style="background: #28a745;" onclick="downloadFile()">Download Shopify CSV</button>
+    </div>
+
+    <div id="processing-ui" class="loader-container hidden">
+        <div class="loader"></div>
+        <div id="status" style="margin-top: 0; color: #007bff;"></div>
+    </div>
+
+    <div class="support-link">
+        Need assistance? Contact <a href="mailto:support@schema-sync.com">support@schema-sync.com</a>
+    </div>
+</div>
+
+<script>
+    window.onload = async () => {
+        if (localStorage.getItem('token') && localStorage.getItem('jobId')) {
+            await fetch(`http://127.0.0.1:8000/verify-payment/${localStorage.getItem('jobId')}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('download-section').classList.remove('hidden');
+            document.getElementById('subtitle').textContent = "Transaction Complete.";
+        }
+    };
+
+    function showSpinner(message) {
+        document.getElementById('processing-ui').classList.remove('hidden');
+        document.getElementById('status').textContent = message;
+    }
+
+    function hideSpinner() {
+        document.getElementById('processing-ui').classList.add('hidden');
+    }
+
+    async function performLogin() {
+        showSpinner("Authenticating...");
+        const formData = new URLSearchParams();
+        formData.append('username', document.getElementById('email').value);
+        formData.append('password', document.getElementById('password').value);
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/token', { method: 'POST', body: formData });
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.access_token);
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('upload-section').classList.remove('hidden');
+                document.getElementById('subtitle').textContent = "Upload your raw supplier data.";
+                hideSpinner();
+            } else {
+                document.getElementById('status').textContent = "Authentication Failed.";
+                document.getElementById('status').style.color = 'red';
+            }
+        } catch (e) {
+            document.getElementById('status').textContent = "Server offline.";
+            document.getElementById('status').style.color = 'red';
+        }
+    }
+
+    function fileSelected() {
+        const fileInput = document.getElementById('file-input');
+        if (fileInput.files.length > 0) {
+            document.getElementById('file-name').textContent = fileInput.files[0].name;
+            document.getElementById('quote-btn').disabled = false;
+        }
+    }
+
+    async function generateQuote() {
+        const fileInput = document.getElementById('file-input');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        
+        document.getElementById('quote-btn').disabled = true;
+        // ACTIVATE THE SPINNER
+        showSpinner("AI is mapping schema & formatting rows. Please wait...");
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/quote', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('jobId', data.job_id);
+                
+                document.getElementById('row-count').textContent = data.rows_detected;
+                document.getElementById('total-price').textContent = data.total_price_usd.toFixed(2);
+                
+                const thead = document.getElementById('preview-head');
+                const tbody = document.getElementById('preview-body');
+                
+                let headRow = '<tr>';
+                data.preview_headers.forEach(header => { headRow += `<th>${header}</th>`; });
+                headRow += '</tr>';
+                thead.innerHTML = headRow;
+
+                let bodyRows = '';
+                data.preview_data.forEach(row => {
+                    bodyRows += '<tr>';
+                    row.forEach(cell => { bodyRows += `<td>${cell}</td>`; });
+                    bodyRows += '</tr>';
+                });
+                tbody.innerHTML = bodyRows;
+
+                document.getElementById('main-container').style.width = '850px';
+                document.getElementById('upload-section').classList.add('hidden');
+                document.getElementById('checkout-section').classList.remove('hidden');
+                document.getElementById('subtitle').textContent = "Review your formatted data.";
+                
+                // HIDE THE SPINNER
+                hideSpinner();
+            } else {
+                document.getElementById('status').textContent = "Pipeline Error. Check backend terminal.";
+                document.getElementById('status').style.color = 'red';
+                document.getElementById('quote-btn').disabled = false;
+                document.querySelector('.loader').style.display = 'none'; // Stop spinning on error
+            }
+        } catch (e) {
+            document.getElementById('status').textContent = "Network Error.";
+            document.getElementById('quote-btn').disabled = false;
+            document.querySelector('.loader').style.display = 'none';
+        }
+    }
+
+    async function payWithStripe() {
+        showSpinner("Connecting to Stripe Secure Gateway...");
+        document.querySelector('.loader').style.display = 'none'; // Remove spinner, keep text
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/checkout/${localStorage.getItem('jobId')}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                window.location.href = data.checkout_url; 
+            }
+        } catch (e) {}
+    }
+
+    async function downloadFile() {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/download/${localStorage.getItem('jobId')}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'shopify_ready_final.csv';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                localStorage.removeItem('token');
+                localStorage.removeItem('jobId');
+                
+                document.getElementById('main-container').style.width = '450px';
+                showSpinner("Transfer complete! Refresh to start over.");
+                document.querySelector('.loader').style.display = 'none';
+            }
+        } catch (e) {}
+    }
+</script>
+
+</body>
+</html>

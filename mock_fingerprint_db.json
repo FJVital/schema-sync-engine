@@ -1,0 +1,10 @@
+{
+    "d1283753563f561f83bf4cfd261206e6958cac3699884ea0cc505fd6efc92e35": {
+        "supplier": "Auto-Detected Supplier",
+        "script_file": "pipeline_d1283753.py"
+    },
+    "7a044f86895dee44f3160675ac25537fe1d18c80b3003506fe2779edcbacc38b": {
+        "supplier": "Auto-Detected Supplier",
+        "script_file": "pipeline_7a044f86.py"
+    }
+}
