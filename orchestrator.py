@@ -1,105 +1,82 @@
 import os
 import csv
-import json
-import hashlib
 import google.generativeai as genai
 
-print("\n=== SCHEMASYNC MASTER ORCHESTRATOR ===")
+# INITIALIZE AI CONTEXT
+# We pull the key directly from Render's Environment Variables
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# 🔴🔴🔴 YOUR GEMINI API KEY GOES HERE 🔴🔴🔴
-# Replace the text inside the quotes with your actual AIzaSy... key
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-genai.configure(api_key=GEMINI_API_KEY)
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+else:
+    print("WARNING: GEMINI_API_KEY not found in environment variables.")
 
-# Initialize the AI Model
-model = genai.GenerativeModel('gemini-2.5-flash')
-
-def get_file_hash(filepath, num_lines=5):
-    """Generates a unique fingerprint for the supplier CSV format."""
-    print(f"> Extracting first {num_lines} raw lines from {filepath}...")
-    hasher = hashlib.md5()
-    with open(filepath, 'r', encoding='utf-8-sig', errors='ignore') as f:
-        for i, line in enumerate(f):
-            if i >= num_lines: break
-            hasher.update(line.encode('utf-8'))
-    return hasher.hexdigest()
-
-def get_ai_mapping(headers, sample_data):
-    """Asks Gemini to map the raw headers to Shopify headers."""
-    print("> Booting Gemini Coder Agent...")
-    print("> Querying Coder Agent for Schema Mapping...")
-    
-    prompt = f"""
-    You are an expert data engineer. Map these raw supplier columns to Shopify CSV columns.
-    
-    Raw Headers: {headers}
-    Sample Data Row: {sample_data}
-    
-    Standard Shopify Headers Required:
-    Handle, Title, Body (HTML), Vendor, Type, Tags, Published, Option1 Name, Option1 Value, Variant SKU, Variant Inventory Qty, Variant Price, Image Src
-    
-    Return ONLY a valid JSON object where the keys are the Shopify Headers and the values are the EXACT matching Raw Headers. 
-    If there is no match for a Shopify header, leave the value as an empty string "". Do not include markdown formatting.
+def run_orchestrator(input_file, output_file):
     """
+    Reads a raw CSV, maps headers to Shopify format using Gemini AI, 
+    and saves the synchronized version.
+    """
+    model = genai.GenerativeModel('gemini-pro')
     
+    raw_data = []
     try:
+        with open(input_file, 'r', encoding='utf-8', errors='ignore') as f:
+            reader = csv.reader(f)
+            headers = next(reader)
+            # Take a sample of the first 5 rows to help the AI understand the data
+            sample_rows = []
+            for i, row in enumerate(reader):
+                sample_rows.append(row)
+                if i > 5: break
+            
+            # Reset and read full data for the actual transformation
+            f.seek(0)
+            next(reader)
+            raw_data = list(reader)
+
+        # AI PROMPT: TEACHING THE MAPPING
+        prompt = f"Map these headers: {headers}. Sample data: {sample_rows}. " \
+                 f"Target headers: Handle, Title, Body (HTML), Vendor, Type, Tags, Published, " \
+                 f"Option1 Name, Option1 Value, Variant SKU, Variant Grams, Variant Inventory Tracker, " \
+                 f"Variant Inventory Qty, Variant Inventory Policy, Variant Fulfillment Service, " \
+                 f"Variant Price, Variant Compare At Price, Image Src. " \
+                 f"Return ONLY a comma-separated list of the indices from the input that match these target headers."
+
+        # GENERATE MAPPING
         response = model.generate_content(prompt)
-        # Clean up the response in case Gemini adds markdown code blocks
-        clean_json = response.text.replace("```json", "").replace("```", "").strip()
-        mapping = json.loads(clean_json)
-        print("> AI Mapping Successful.")
-        return mapping
+        mapping_indices = response.text.strip().split(',')
+
+        # TRANSFORM AND SAVE
+        shopify_headers = [
+            "Handle", "Title", "Body (HTML)", "Vendor", "Type", "Tags", "Published",
+            "Option1 Name", "Option1 Value", "Variant SKU", "Variant Grams", "Variant Inventory Tracker",
+            "Variant Inventory Qty", "Variant Inventory Policy", "Variant Fulfillment Service",
+            "Variant Price", "Variant Compare At Price", "Image Src"
+        ]
+
+        with open(output_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(shopify_headers)
+            
+            for row in raw_data:
+                new_row = []
+                for idx in mapping_indices:
+                    try:
+                        clean_idx = int(idx.strip())
+                        if 0 <= clean_idx < len(row):
+                            new_row.append(row[clean_idx])
+                        else:
+                            new_row.append("")
+                    except:
+                        new_row.append("")
+                
+                # Fill remaining columns if mapping returned fewer indices than headers
+                while len(new_row) < len(shopify_headers):
+                    new_row.append("")
+                    
+                writer.writerow(new_row[:len(shopify_headers)])
+                
+        return True
     except Exception as e:
-        print(f"> CRITICAL AI ERROR: {e}")
-        raise
-
-def process_file():
-    input_file = "input.csv"
-    output_file = "output.csv"
-    
-    if not os.path.exists(input_file):
-        print("> ERROR: input.csv not found.")
-        return
-
-    file_hash = get_file_hash(input_file)
-    print(f"> [NEW SUPPLIER DETECTED] Processing format hash {file_hash[:8]}...")
-
-    # Read the data
-    with open(input_file, 'r', encoding='utf-8-sig', errors='ignore') as infile:
-        reader = csv.DictReader(infile)
-        raw_headers = reader.fieldnames
-        
-        # Grab a sample row for the AI
-        try:
-            sample_row = next(reader)
-        except StopIteration:
-            print("> ERROR: CSV is empty.")
-            return
-
-    # Ask AI to generate the mapping rules
-    mapping_rules = get_ai_mapping(raw_headers, sample_row)
-    shopify_headers = list(mapping_rules.keys())
-
-    print("> Formatting data to Shopify standards...")
-    
-    # Process the entire file using the AI's rules
-    with open(input_file, 'r', encoding='utf-8-sig', errors='ignore') as infile, \
-         open(output_file, 'w', newline='', encoding='utf-8') as outfile:
-        
-        reader = csv.DictReader(infile)
-        writer = csv.DictWriter(outfile, fieldnames=shopify_headers)
-        writer.writeheader()
-        
-        # Write the sample row we extracted earlier
-        first_row_out = {s_head: sample_row.get(r_head, "") for s_head, r_head in mapping_rules.items()}
-        writer.writerow(first_row_out)
-        
-        # Process the rest of the 2,000+ rows instantly
-        for row in reader:
-            out_row = {s_head: row.get(r_head, "") for s_head, r_head in mapping_rules.items()}
-            writer.writerow(out_row)
-
-    print("> Orchestrator Pipeline Complete. output.csv generated.")
-
-if __name__ == "__main__":
-    process_file()
+        print(f"Orchestrator Error: {str(e)}")
+        return False
