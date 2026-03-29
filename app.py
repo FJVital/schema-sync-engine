@@ -15,19 +15,12 @@ import auth
 # INITIALIZE APP
 app = FastAPI()
 
-# MASTER CORS CONFIGURATION (MAXIMUM WHITELIST)
+# MASTER CORS CONFIGURATION (THE UNIVERSAL UNLOCK)
+# This completely disables browser origin blocking.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "[https://fjvital.github.io](https://fjvital.github.io)",
-        "[http://fjvital.github.io](http://fjvital.github.io)",
-        "http://localhost:8000",
-        "http://localhost:10000",
-        "http://localhost:5500",
-        "[http://127.0.0.1:5500](http://127.0.0.1:5500)",
-        "null" # Allows testing locally by double-clicking the HTML file
-    ],
-    allow_credentials=True,
+    allow_origins=["*"], 
+    allow_credentials=False, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -133,8 +126,8 @@ async def vault_card(current_user: str = Depends(auth.get_current_user)):
             payment_method_types=['card'],
             mode='setup',
             customer=user["stripe_customer_id"],
-            success_url="[https://fjvital.github.io/schema-sync-engine/?setup=success](https://fjvital.github.io/schema-sync-engine/?setup=success)",
-            cancel_url="[https://fjvital.github.io/schema-sync-engine/?setup=cancel](https://fjvital.github.io/schema-sync-engine/?setup=cancel)",
+            success_url="https://fjvital.github.io/schema-sync-engine/?setup=success",
+            cancel_url="https://fjvital.github.io/schema-sync-engine/?setup=cancel",
         )
         return {"vault_url": session.url}
     except Exception as e:
