@@ -62,8 +62,8 @@
 
     <div id="login-section">
         <form id="login-form">
-            <input type="email" id="email" class="input-field" placeholder="Email Address" value="fjvital@gmail.com" required>
-            <input type="password" id="password" class="input-field" placeholder="Password" value="$Fortune11$" required>
+            <input type="email" id="email" class="input-field" placeholder="Email Address" value="fjvital@gmail.com" required autocomplete="username">
+            <input type="password" id="password" class="input-field" placeholder="Password" value="$Fortune11$" required autocomplete="current-password">
             <button type="submit" id="login-btn">Secure Login</button>
         </form>
     </div>
@@ -126,7 +126,6 @@
 <script>
     const API_BASE_URL = "[https://schema-sync-engine.onrender.com](https://schema-sync-engine.onrender.com)";
 
-    // Attach event listener cleanly to prevent DOM warnings
     document.getElementById('login-form').addEventListener('submit', function(e) {
         e.preventDefault();
         performLogin();
@@ -142,7 +141,8 @@
         }
 
         if (localStorage.getItem('token') && localStorage.getItem('jobId')) {
-            await fetch(`${API_BASE_URL}/verify-payment/${localStorage.getItem('jobId')}`, {
+            // CACHE BUSTER ADDED HERE
+            await fetch(`${API_BASE_URL}/verify-payment/${localStorage.getItem('jobId')}?_t=${Date.now()}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
@@ -168,7 +168,8 @@
         formData.append('password', document.getElementById('password').value);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/token`, { method: 'POST', body: formData });
+            // CACHE BUSTER: ?_t=${Date.now()} forces Chrome to bypass the 405 memory cache
+            const response = await fetch(`${API_BASE_URL}/token?_t=${Date.now()}`, { method: 'POST', body: formData });
             if (response.ok) {
                 const data = await response.json();
                 localStorage.setItem('token', data.access_token);
@@ -202,7 +203,8 @@
     async function setupCard() {
         showSpinner("Connecting to Stripe Secure Vault...");
         try {
-            const response = await fetch(`${API_BASE_URL}/vault-card`, {
+            // CACHE BUSTER ADDED HERE
+            const response = await fetch(`${API_BASE_URL}/vault-card?_t=${Date.now()}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
@@ -229,7 +231,8 @@
         showSpinner("AI Orchestrator mapping schema in the cloud. Please wait...");
 
         try {
-            const response = await fetch(`${API_BASE_URL}/quote`, {
+            // CACHE BUSTER ADDED HERE
+            const response = await fetch(`${API_BASE_URL}/quote?_t=${Date.now()}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                 body: formData
@@ -284,7 +287,8 @@
         document.getElementById('checkout-section').classList.add('hidden'); 
         
         try {
-            const response = await fetch(`${API_BASE_URL}/checkout/${localStorage.getItem('jobId')}`, {
+            // CACHE BUSTER ADDED HERE
+            const response = await fetch(`${API_BASE_URL}/checkout/${localStorage.getItem('jobId')}?_t=${Date.now()}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
@@ -307,7 +311,8 @@
 
     async function downloadFile() {
         try {
-            const response = await fetch(`${API_BASE_URL}/download/${localStorage.getItem('jobId')}`, {
+            // CACHE BUSTER ADDED HERE
+            const response = await fetch(`${API_BASE_URL}/download/${localStorage.getItem('jobId')}?_t=${Date.now()}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             if (response.ok) {
