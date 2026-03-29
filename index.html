@@ -67,6 +67,12 @@
     </div>
 
     <div id="upload-section" class="hidden">
+        <div style="background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: left; border-left: 5px solid #28a745;">
+            <h4 style="margin: 0 0 5px 0; color: #333;">Express Billing</h4>
+            <p style="margin: 0 0 10px 0; font-size: 12px;">Add a card on file to enable instant 1-Click AI Processing.</p>
+            <button id="vault-btn" onclick="setupCard()" style="background: #28a745; padding: 8px 15px; font-size: 14px; width: auto;">Secure Card via Stripe</button>
+        </div>
+
         <label class="upload-area">
             <span id="file-name">Click to select raw CSV file</span>
             <input type="file" id="file-input" accept=".csv" onchange="fileSelected()">
@@ -92,7 +98,7 @@
             </table>
         </div>
 
-        <button id="pay-btn" class="stripe-btn" onclick="payWithStripe()">Authorize Payment via Stripe</button>
+        <button id="pay-btn" class="stripe-btn" onclick="payWithStripe()">Confirm 1-Click Payment</button>
     </div>
 
     <div id="download-section" class="hidden">
@@ -116,9 +122,17 @@
 </div>
 
 <script>
-    const API_BASE_URL = "https://schema-sync-engine.onrender.com";
+    const API_BASE_URL = "[https://schema-sync-engine.onrender.com](https://schema-sync-engine.onrender.com)";
 
     window.onload = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.get('setup') === 'success') {
+            document.getElementById('subtitle').textContent = "Card successfully vaulted! You can now use 1-Click Processing.";
+            document.getElementById('subtitle').style.color = "#28a745";
+            document.getElementById('subtitle').style.fontWeight = "bold";
+        }
+
         if (localStorage.getItem('token') && localStorage.getItem('jobId')) {
             await fetch(`${API_BASE_URL}/verify-payment/${localStorage.getItem('jobId')}`, {
                 method: 'POST',
@@ -152,7 +166,10 @@
                 localStorage.setItem('token', data.access_token);
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('upload-section').classList.remove('hidden');
-                document.getElementById('subtitle').textContent = "Upload your raw supplier data.";
+                
+                if (!window.location.search.includes('setup=success')) {
+                    document.getElementById('subtitle').textContent = "Upload your raw supplier data.";
+                }
                 hideSpinner();
             } else {
                 document.getElementById('status').textContent = "Authentication Failed.";
@@ -174,12 +191,30 @@
         }
     }
 
+    async function setupCard() {
+        showSpinner("Connecting to Stripe Secure Vault...");
+        try {
+            const response = await fetch(`${API_BASE_URL}/vault-card`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                window.location.href = data.vault_url; 
+            } else {
+                hideSpinner();
+                alert("Failed to connect to billing server.");
+            }
+        } catch (e) {
+            hideSpinner();
+        }
+    }
+
     async function generateQuote() {
         const fileInput = document.getElementById('file-input');
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
         
-        // MEMORY UPGRADE: Save original filename to local browser storage
         localStorage.setItem('origFileName', fileInput.files[0].name);
         
         document.getElementById('quote-btn').disabled = true;
@@ -219,6 +254,8 @@
                 document.getElementById('upload-section').classList.add('hidden');
                 document.getElementById('checkout-section').classList.remove('hidden');
                 document.getElementById('subtitle').textContent = "Review your formatted data.";
+                document.getElementById('subtitle').style.color = "#666";
+                document.getElementById('subtitle').style.fontWeight = "normal";
                 
                 hideSpinner();
             } else {
@@ -235,18 +272,31 @@
     }
 
     async function payWithStripe() {
-        showSpinner("Connecting to Stripe Secure Gateway...");
-        document.querySelector('.loader').style.display = 'none'; 
+        showSpinner("Processing 1-Click Payment...");
+        document.getElementById('checkout-section').classList.add('hidden'); 
+        
         try {
             const response = await fetch(`${API_BASE_URL}/checkout/${localStorage.getItem('jobId')}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
+            
             if (response.ok) {
-                const data = await response.json();
-                window.location.href = data.checkout_url; 
+                // Payment cleared instantly! Show the download screen.
+                document.getElementById('download-section').classList.remove('hidden');
+                hideSpinner();
+            } else {
+                // Payment declined or no card on file
+                const err = await response.json();
+                alert(err.detail || "Payment failed. Please check your billing setup.");
+                document.getElementById('checkout-section').classList.remove('hidden');
+                hideSpinner();
             }
-        } catch (e) {}
+        } catch (e) {
+            alert("Network error during payment processing.");
+            document.getElementById('checkout-section').classList.remove('hidden');
+            hideSpinner();
+        }
     }
 
     async function downloadFile() {
@@ -260,7 +310,6 @@
                 const a = document.createElement('a');
                 a.href = url;
                 
-                // FILENAME UPGRADE: Retrieve original name, split extension, append suffix
                 const origName = localStorage.getItem('origFileName') || 'export.csv';
                 const baseName = origName.substring(0, origName.lastIndexOf('.')) || origName;
                 a.download = `${baseName}_ready.csv`;
@@ -269,7 +318,6 @@
                 a.click();
                 a.remove();
                 
-                // Clear memory
                 localStorage.removeItem('token');
                 localStorage.removeItem('jobId');
                 localStorage.removeItem('origFileName');

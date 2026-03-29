@@ -48,9 +48,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     # PHASE 1 AUTO-BILLING: Ensure user has a Stripe Customer profile
     if not user.get("stripe_customer_id"):
         try:
-            # Create a new customer in Stripe
             customer = stripe.Customer.create(email=user["username"])
-            # Save the ID back to our database
             database.update_stripe_customer_id(user["username"], customer.id)
             user["stripe_customer_id"] = customer.id
             print(f"Created Stripe Customer: {customer.id}")
@@ -77,12 +75,10 @@ async def get_quote(file: UploadFile = File(...), current_user: str = Depends(au
         for _ in reader:
             row_count += 1
 
-    # Execute the AI Mapping
     success = run_orchestrator(input_path, output_path)
     if not success:
         raise HTTPException(status_code=500, detail="AI Orchestrator failed to process CSV.")
 
-    # Generate Preview
     preview_data = []
     headers = []
     with open(output_path, "r", encoding='utf-8', errors='ignore') as f:
@@ -112,33 +108,67 @@ async def get_quote(file: UploadFile = File(...), current_user: str = Depends(au
         "preview_data": preview_data
     }
 
-@app.post("/checkout/{job_id}")
-async def create_checkout(job_id: str, current_user: str = Depends(auth.get_current_user)):
-    if job_id not in jobs:
-        raise HTTPException(status_code=404, detail="Job not found")
+@app.post("/vault-card")
+async def vault_card(current_user: str = Depends(auth.get_current_user)):
+    user = database.get_user(current_user)
     
-    job = jobs[job_id]
+    if not user or not user.get("stripe_customer_id"):
+        raise HTTPException(status_code=400, detail="No billing profile found.")
     
-    # Note: This is still the manual checkout link. 
-    # We will rewrite this into an Off-Session Auto-Charge in Phase 3.
     try:
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {'name': 'CSV Schema-Sync Processing'},
-                    'unit_amount': job["price"],
-                },
-                'quantity': 1,
-            }],
-            mode='payment',
-            success_url=f"https://fjvital.github.io/schema-sync-engine/?status=success&jobId={job_id}",
-            cancel_url=f"https://fjvital.github.io/schema-sync-engine/?status=cancel",
+            mode='setup',
+            customer=user["stripe_customer_id"],
+            success_url="[https://fjvital.github.io/schema-sync-engine/?setup=success](https://fjvital.github.io/schema-sync-engine/?setup=success)",
+            cancel_url="[https://fjvital.github.io/schema-sync-engine/?setup=cancel](https://fjvital.github.io/schema-sync-engine/?setup=cancel)",
         )
-        return {"checkout_url": session.url}
+        return {"vault_url": session.url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/checkout/{job_id}")
+async def auto_charge(job_id: str, current_user: str = Depends(auth.get_current_user)):
+    """PHASE 3: The 1-Click Auto-Charge Engine"""
+    if job_id not in jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    user = database.get_user(current_user)
+    if not user or not user.get("stripe_customer_id"):
+        raise HTTPException(status_code=400, detail="No billing profile found. Please add a card.")
+        
+    job = jobs[job_id]
+    
+    try:
+        # Fetch the user's vaulted card from Stripe
+        payment_methods = stripe.PaymentMethod.list(
+            customer=user["stripe_customer_id"],
+            type="card",
+        )
+        
+        if not payment_methods.data:
+            raise HTTPException(status_code=400, detail="No card on file. Please use the Express Billing setup first.")
+            
+        payment_method_id = payment_methods.data[0].id
+        
+        # Fire the silent Auto-Charge
+        intent = stripe.PaymentIntent.create(
+            amount=job["price"],
+            currency='usd',
+            customer=user["stripe_customer_id"],
+            payment_method=payment_method_id,
+            off_session=True, # Background charge
+            confirm=True,     # Instantly authorize and capture
+        )
+        
+        # Unlock the file
+        jobs[job_id]["paid"] = True
+        return {"status": "success"}
+        
+    except stripe.error.CardError as e:
+        raise HTTPException(status_code=400, detail=f"Charge declined: {e.user_message}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal billing error.")
 
 @app.post("/verify-payment/{job_id}")
 async def verify(job_id: str, current_user: str = Depends(auth.get_current_user)):
