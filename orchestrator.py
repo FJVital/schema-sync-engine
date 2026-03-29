@@ -1,9 +1,9 @@
 import os
 import csv
+import json
 import google.generativeai as genai
 
 # INITIALIZE AI CONTEXT
-# We pull the key directly from Render's Environment Variables
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 if GEMINI_API_KEY:
@@ -13,7 +13,7 @@ else:
 
 def run_orchestrator(input_file, output_file):
     """
-    Reads a raw CSV, maps headers to Shopify format using Gemini AI, 
+    Reads a raw CSV, maps headers to Shopify format using Gemini AI (JSON mode), 
     and saves the synchronized version.
     """
     model = genai.GenerativeModel('gemini-2.5-flash')
@@ -27,26 +27,13 @@ def run_orchestrator(input_file, output_file):
             sample_rows = []
             for i, row in enumerate(reader):
                 sample_rows.append(row)
-                if i > 5: break
+                if i >= 4: break
             
             # Reset and read full data for the actual transformation
             f.seek(0)
             next(reader)
             raw_data = list(reader)
 
-        # AI PROMPT: TEACHING THE MAPPING
-        prompt = f"Map these headers: {headers}. Sample data: {sample_rows}. " \
-                 f"Target headers: Handle, Title, Body (HTML), Vendor, Type, Tags, Published, " \
-                 f"Option1 Name, Option1 Value, Variant SKU, Variant Grams, Variant Inventory Tracker, " \
-                 f"Variant Inventory Qty, Variant Inventory Policy, Variant Fulfillment Service, " \
-                 f"Variant Price, Variant Compare At Price, Image Src. " \
-                 f"Return ONLY a comma-separated list of the indices from the input that match these target headers."
-
-        # GENERATE MAPPING
-        response = model.generate_content(prompt)
-        mapping_indices = response.text.strip().split(',')
-
-        # TRANSFORM AND SAVE
         shopify_headers = [
             "Handle", "Title", "Body (HTML)", "Vendor", "Type", "Tags", "Published",
             "Option1 Name", "Option1 Value", "Variant SKU", "Variant Grams", "Variant Inventory Tracker",
@@ -54,27 +41,46 @@ def run_orchestrator(input_file, output_file):
             "Variant Price", "Variant Compare At Price", "Image Src"
         ]
 
+        # AI PROMPT: TEACHING THE MAPPING (STRICT JSON)
+        prompt = f"Map these input headers to the target headers based on the sample data.\n" \
+                 f"Input headers: {headers}\n" \
+                 f"Sample data: {sample_rows}\n" \
+                 f"Target headers: {shopify_headers}\n\n" \
+                 f"Return a strict JSON object where the keys are the exact Target headers, and the values are the integer index (0-based) of the matching Input header. " \
+                 f"If there is no match for a target header, use null as the value. Do not write any other text."
+
+        # GENERATE MAPPING
+        response = model.generate_content(prompt)
+        
+        # PARSE AI JSON RESPONSE SAFELY
+        json_text = response.text.strip()
+        # Clean markdown formatting if the AI wrapped it in code blocks
+        if json_text.startswith("```json"):
+            json_text = json_text[7:]
+        elif json_text.startswith("```"):
+            json_text = json_text[3:]
+            
+        if json_text.endswith("```"):
+            json_text = json_text[:-3]
+            
+        mapping_dict = json.loads(json_text.strip())
+
+        # TRANSFORM AND SAVE
         with open(output_file, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(shopify_headers)
             
             for row in raw_data:
                 new_row = []
-                for idx in mapping_indices:
-                    try:
-                        clean_idx = int(idx.strip())
-                        if 0 <= clean_idx < len(row):
-                            new_row.append(row[clean_idx])
-                        else:
-                            new_row.append("")
-                    except:
+                for target_header in shopify_headers:
+                    idx = mapping_dict.get(target_header)
+                    # Only insert data if the AI successfully mapped an integer and it's within bounds
+                    if isinstance(idx, int) and 0 <= idx < len(row):
+                        new_row.append(row[idx])
+                    else:
                         new_row.append("")
-                
-                # Fill remaining columns if mapping returned fewer indices than headers
-                while len(new_row) < len(shopify_headers):
-                    new_row.append("")
-                    
-                writer.writerow(new_row[:len(shopify_headers)])
+                        
+                writer.writerow(new_row)
                 
         return True
     except Exception as e:
