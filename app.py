@@ -15,10 +15,14 @@ import auth
 # INITIALIZE APP
 app = FastAPI()
 
-# MASTER CORS CONFIGURATION (Global Override)
+# MASTER CORS CONFIGURATION (STRICT WHITELIST)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=[
+        "[https://fjvital.github.io](https://fjvital.github.io)", 
+        "http://localhost:8000",
+        "http://localhost:10000"
+    ], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
