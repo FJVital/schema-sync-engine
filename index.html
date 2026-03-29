@@ -10,7 +10,6 @@
         h1 { color: #333; font-size: 24px; margin-bottom: 5px; }
         p { color: #666; font-size: 14px; margin-bottom: 25px; }
         
-        /* Instructions Styling */
         .instructions-box { background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; text-align: left; margin-bottom: 25px; border-radius: 4px; font-size: 13px; color: #444; line-height: 1.6; }
         .instructions-box strong { color: #222; display: block; margin-bottom: 8px; font-size: 14px; }
         .instructions-box ol { margin: 0; padding-left: 20px; }
@@ -26,7 +25,6 @@
         .hidden { display: none !important; }
         #status { margin-top: 15px; font-weight: bold; color: #333; }
         
-        /* DYNAMIC SPINNER */
         .loader-container { display: flex; flex-direction: column; align-items: center; margin-top: 15px; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -118,7 +116,6 @@
 </div>
 
 <script>
-    // THE GLOBAL CLOUD UPLINK
     const API_BASE_URL = "https://schema-sync-engine.onrender.com";
 
     window.onload = async () => {
@@ -181,6 +178,9 @@
         const fileInput = document.getElementById('file-input');
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
+        
+        // MEMORY UPGRADE: Save original filename to local browser storage
+        localStorage.setItem('origFileName', fileInput.files[0].name);
         
         document.getElementById('quote-btn').disabled = true;
         showSpinner("AI Orchestrator mapping schema in the cloud. Please wait...");
@@ -259,12 +259,20 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'shopify_ready_final.csv';
+                
+                // FILENAME UPGRADE: Retrieve original name, split extension, append suffix
+                const origName = localStorage.getItem('origFileName') || 'export.csv';
+                const baseName = origName.substring(0, origName.lastIndexOf('.')) || origName;
+                a.download = `${baseName}_ready.csv`;
+                
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
+                
+                // Clear memory
                 localStorage.removeItem('token');
                 localStorage.removeItem('jobId');
+                localStorage.removeItem('origFileName');
                 
                 document.getElementById('main-container').style.width = '450px';
                 showSpinner("Transfer complete! Refresh to start over.");
