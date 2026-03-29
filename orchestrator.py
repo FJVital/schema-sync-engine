@@ -54,7 +54,6 @@ def run_orchestrator(input_file, output_file):
         
         # PARSE AI JSON RESPONSE SAFELY
         json_text = response.text.strip()
-        # Clean markdown formatting if the AI wrapped it in code blocks
         if json_text.startswith("```json"):
             json_text = json_text[7:]
         elif json_text.startswith("```"):
@@ -74,7 +73,6 @@ def run_orchestrator(input_file, output_file):
                 new_row = []
                 for target_header in shopify_headers:
                     idx = mapping_dict.get(target_header)
-                    # Only insert data if the AI successfully mapped an integer and it's within bounds
                     if isinstance(idx, int) and 0 <= idx < len(row):
                         new_row.append(row[idx])
                     else:
