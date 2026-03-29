@@ -16,7 +16,7 @@ def run_orchestrator(input_file, output_file):
     Reads a raw CSV, maps headers to Shopify format using Gemini AI, 
     and saves the synchronized version.
     """
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash')
     
     raw_data = []
     try:
