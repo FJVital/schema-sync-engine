@@ -63,6 +63,23 @@ async def login(data: LoginRequest):
     access_token = auth.create_access_token(data={"sub": user["username"]})
     return {"access_token": access_token, "token_type": "bearer"}
 
+# --- NEW: UI BILLING STATUS CHECKER ---
+@app.get("/billing-status")
+async def billing_status(current_user: str = Depends(auth.get_current_user)):
+    user = database.get_user(current_user)
+    if not user or not user.get("stripe_customer_id"):
+        return {"has_card": False}
+    
+    try:
+        # Ask Stripe if this customer has any cards saved
+        payment_methods = stripe.PaymentMethod.list(
+            customer=user["stripe_customer_id"],
+            type="card",
+        )
+        return {"has_card": len(payment_methods.data) > 0}
+    except Exception as e:
+        return {"has_card": False}
+
 @app.post("/quote")
 async def get_quote(file: UploadFile = File(...), current_user: str = Depends(auth.get_current_user)):
     job_id = str(uuid.uuid4())
@@ -162,7 +179,6 @@ async def auto_charge(job_id: str, current_user: str = Depends(auth.get_current_
         raise HTTPException(status_code=400, detail=f"Charge declined: {e.user_message}")
     except stripe.error.StripeError as e:
         print(f"STRIPE API ERROR: {str(e)}")
-        # This prevents the 500 error and sends the real Stripe reason to the frontend
         raise HTTPException(status_code=400, detail=f"Stripe configuration error: {str(e)}")
     except Exception as e:
         print(f"SYSTEM ERROR: {str(e)}")

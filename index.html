@@ -25,7 +25,6 @@
         .hidden { display: none !important; }
         #status { margin-top: 15px; font-weight: bold; color: #333; }
         
-        /* FAST SPINNER UI */
         .loader-container { display: flex; flex-direction: column; align-items: center; margin-top: 15px; }
         .loader-wrapper { position: relative; width: 45px; height: 45px; margin-bottom: 10px; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 100%; height: 100%; animation: spin 1s linear infinite; box-sizing: border-box; }
@@ -72,9 +71,9 @@
     </div>
 
     <div id="upload-section" class="hidden">
-        <div style="background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: left; border-left: 5px solid #28a745;">
-            <h4 style="margin: 0 0 5px 0; color: #333;">Express Billing</h4>
-            <p style="margin: 0 0 10px 0; font-size: 12px;">Add a card on file to enable instant 1-Click AI Processing.</p>
+        <div id="billing-box" style="background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: left; border-left: 5px solid #28a745; transition: all 0.3s ease;">
+            <h4 id="billing-title" style="margin: 0 0 5px 0; color: #333;">Express Billing</h4>
+            <p id="billing-desc" style="margin: 0 0 10px 0; font-size: 12px;">Add a card on file to enable instant 1-Click AI Processing.</p>
             <button id="vault-btn" onclick="setupCard()" style="background: #28a745; padding: 8px 15px; font-size: 14px; width: auto;">Secure Card via Stripe</button>
         </div>
 
@@ -92,6 +91,7 @@
                 <span style="font-size: 14px; color: #666;">Showing first 20 rows of <b id="row-count">0</b> total rows.</span>
             </div>
             <div style="text-align: right;">
+                <span style="font-size: 12px; color: #666; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Full File Price</span>
                 <h2 style="margin: 0; color: #635bff;">$<span id="total-price">0.00</span></h2>
             </div>
         </div>
@@ -107,16 +107,14 @@
     </div>
 
     <div id="download-section" class="hidden">
-        <div class="quote-header">
+        <div class="quote-header" style="border-left: 5px solid #28a745; justify-content: center; text-align: center;">
             <div>
-                <h3 style="margin: 0 0 5px 0; color: #333;">Pipeline Complete</h3>
-                <span style="font-size: 14px; color: #666;">Showing first 20 rows of <b id="row-count">0</b> total rows.</span>
-            </div>
-            <div style="text-align: right;">
-                <span style="font-size: 12px; color: #666; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Full File Price</span>
-                <h2 style="margin: 0; color: #635bff;">$<span id="total-price">0.00</span></h2>
+                <h3 style="color: #28a745; margin: 0 0 5px 0;">Payment Verified</h3>
+                <p style="margin: 0;">Your Shopify CSV is unlocked.</p>
             </div>
         </div>
+        <button id="download-btn" style="background: #28a745;" onclick="downloadFile()">Download Shopify CSV</button>
+    </div>
 
     <div id="processing-ui" class="loader-container hidden">
         <div class="loader-wrapper">
@@ -135,7 +133,6 @@
     const API_BASE_URL = "https://schema-sync-engine.onrender.com";
     let progressInterval;
 
-    // UPDATED SPINNER LOGIC (Percentage is now optional and disabled for login)
     function showSpinner(message, showPercentage = false, durationMs = 3000) {
         document.getElementById('processing-ui').classList.remove('hidden');
         document.getElementById('status').textContent = message;
@@ -165,6 +162,42 @@
         document.getElementById('processing-ui').classList.add('hidden');
     }
 
+    // --- NEW: UI CHECK FOR SAVED CARD ---
+    async function checkBillingStatus() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/billing-status`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const billingBox = document.getElementById('billing-box');
+                const billingTitle = document.getElementById('billing-title');
+                const billingDesc = document.getElementById('billing-desc');
+                const vaultBtn = document.getElementById('vault-btn');
+
+                if (data.has_card) {
+                    billingBox.style.borderLeft = "5px solid #635bff"; 
+                    billingBox.style.background = "#f8f9fa";
+                    billingTitle.textContent = "Active Card on File";
+                    billingTitle.style.color = "#635bff";
+                    billingDesc.textContent = "Your payment method is securely vaulted for instant 1-Click Processing.";
+                    vaultBtn.textContent = "Update Saved Card";
+                    vaultBtn.style.background = "#6c757d"; // Sleek gray for "Update"
+                } else {
+                    billingBox.style.borderLeft = "5px solid #28a745"; 
+                    billingBox.style.background = "#e9ecef";
+                    billingTitle.textContent = "Express Billing";
+                    billingTitle.style.color = "#333";
+                    billingDesc.textContent = "Add a card on file to enable instant 1-Click AI Processing.";
+                    vaultBtn.textContent = "Secure Card via Stripe";
+                    vaultBtn.style.background = "#28a745";
+                }
+            }
+        } catch (e) {
+            console.error("Could not check billing status");
+        }
+    }
+
     document.getElementById('login-form').addEventListener('submit', function(e) {
         e.preventDefault();
         performLogin();
@@ -172,6 +205,8 @@
 
     window.onload = async () => {
         const urlParams = new URLSearchParams(window.location.search);
+        const hasToken = localStorage.getItem('token');
+        const hasJobId = localStorage.getItem('jobId');
         
         if (urlParams.get('setup') === 'success') {
             document.getElementById('subtitle').textContent = "Card successfully vaulted! You can now use 1-Click Processing.";
@@ -179,19 +214,28 @@
             document.getElementById('subtitle').style.fontWeight = "bold";
         }
 
-        if (localStorage.getItem('token') && localStorage.getItem('jobId')) {
-            await fetch(`${API_BASE_URL}/verify-payment/${localStorage.getItem('jobId')}?_t=${Date.now()}`, {
+        // AUTO-LOGIN LOGIC
+        if (hasToken && hasJobId) {
+            await fetch(`${API_BASE_URL}/verify-payment/${hasJobId}?_t=${Date.now()}`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                headers: { 'Authorization': `Bearer ${hasToken}` }
             });
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('download-section').classList.remove('hidden');
             document.getElementById('subtitle').textContent = "Transaction Complete.";
+        } else if (hasToken) {
+            // Skips login if token exists (e.g. returning from Stripe)
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('upload-section').classList.remove('hidden');
+            if (!urlParams.get('setup')) {
+                document.getElementById('subtitle').textContent = "Upload your raw supplier data.";
+            }
+            checkBillingStatus();
         }
     };
 
     async function performLogin() {
-        showSpinner("Authenticating..."); // Instant spinner, no percentage
+        showSpinner("Authenticating..."); 
 
         try {
             const response = await fetch(`${API_BASE_URL}/token`, { 
@@ -212,6 +256,9 @@
                 if (!window.location.search.includes('setup=success')) {
                     document.getElementById('subtitle').textContent = "Upload your raw supplier data.";
                 }
+                
+                // Check if they already have a card saved
+                checkBillingStatus();
                 hideSpinner();
             } else {
                 document.getElementById('status').textContent = "Authentication Failed (Check credentials).";
@@ -234,7 +281,7 @@
     }
 
     async function setupCard() {
-        showSpinner("Connecting to Stripe Secure Vault..."); // Instant spinner, no percentage
+        showSpinner("Connecting to Stripe Secure Vault..."); 
         try {
             const response = await fetch(`${API_BASE_URL}/vault-card?_t=${Date.now()}`, {
                 method: 'POST',
@@ -261,7 +308,6 @@
         
         document.getElementById('quote-btn').disabled = true;
         
-        // This is the ONLY place the percentage spinner triggers
         showSpinner("AI Orchestrator mapping schema. Please wait...", true, 8000); 
 
         try {
@@ -316,7 +362,7 @@
     }
 
     async function payWithStripe() {
-        showSpinner("Processing 1-Click Payment..."); // Instant spinner, no percentage
+        showSpinner("Processing 1-Click Payment..."); 
         document.getElementById('checkout-section').classList.add('hidden'); 
         
         try {
@@ -330,7 +376,6 @@
                 hideSpinner();
             } else {
                 const err = await response.json();
-                // THIS ALERT NOW SHOWS THE EXACT STRIPE ERROR INSTEAD OF "Payment failed."
                 alert("Charge Failed: " + (err.detail || "Unknown billing error.")); 
                 document.getElementById('checkout-section').classList.remove('hidden');
                 hideSpinner();
@@ -361,13 +406,14 @@
                 a.click();
                 a.remove();
                 
-                localStorage.removeItem('token');
-                localStorage.removeItem('jobId');
+                localStorage.removeItem('jobId'); // Keep token so user doesn't log out
                 localStorage.removeItem('origFileName');
                 
                 document.getElementById('main-container').style.width = '450px';
                 showSpinner("Transfer complete! Refresh to start over.", false, 1000);
-                setTimeout(hideSpinner, 1000);
+                setTimeout(() => {
+                    window.location.href = window.location.pathname; // Hard reset to upload screen
+                }, 1500);
             }
         } catch (e) {}
     }
