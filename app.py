@@ -5,7 +5,7 @@ import stripe
 from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 from typing import List
 
 # INTERNAL MODULES
@@ -38,26 +38,24 @@ if not os.path.exists(UPLOAD_DIR):
 
 jobs = {}
 
-# MANUAL PREFLIGHT OVERRIDE: Forces successful 200 OK for any invisible browser checks
-@app.options("/{path:path}")
-async def preflight_handler(path: str, response: Response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    return {"status": "ok"}
-
-# HEALTH CHECK (Fixes Render's internal 405 error logs)
+# HEALTH CHECK
 @app.get("/")
 @app.head("/")
 async def root():
     return {"status": "Schema-Sync Backend is Live"}
 
+# --- SURGICAL FIX: CLEAN JSON AUTHENTICATION ---
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
 @app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = database.get_user(form_data.username)
-    if not user or not auth.verify_password(form_data.password, user["hashed_password"]):
+async def login(data: LoginRequest):
+    user = database.get_user(data.username)
+    if not user or not auth.verify_password(data.password, user["hashed_password"]):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     
+    # Ensure user has a Stripe Customer profile
     if not user.get("stripe_customer_id"):
         try:
             customer = stripe.Customer.create(email=user["username"])
@@ -68,6 +66,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     access_token = auth.create_access_token(data={"sub": user["username"]})
     return {"access_token": access_token, "token_type": "bearer"}
+# -----------------------------------------------
 
 @app.post("/quote")
 async def get_quote(file: UploadFile = File(...), current_user: str = Depends(auth.get_current_user)):
@@ -128,8 +127,8 @@ async def vault_card(current_user: str = Depends(auth.get_current_user)):
             payment_method_types=['card'],
             mode='setup',
             customer=user["stripe_customer_id"],
-            success_url="[https://fjvital.github.io/schema-sync-engine/?setup=success](https://fjvital.github.io/schema-sync-engine/?setup=success)",
-            cancel_url="[https://fjvital.github.io/schema-sync-engine/?setup=cancel](https://fjvital.github.io/schema-sync-engine/?setup=cancel)",
+            success_url="https://fjvital.github.io/schema-sync-engine/?setup=success",
+            cancel_url="https://fjvital.github.io/schema-sync-engine/?setup=cancel",
         )
         return {"vault_url": session.url}
     except Exception as e:
