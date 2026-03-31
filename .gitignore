@@ -13,3 +13,6 @@ output.csv
 
 # Environment Variables (Secrets)
 .env
+*.txt
+.env
+vault/
