@@ -2,9 +2,10 @@ import os
 import uuid
 import csv
 import stripe
+import boto3
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 from typing import List
 
@@ -28,10 +29,21 @@ app.add_middleware(
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
+# AWS S3 CONFIGURATION
+AWS_BUCKET_NAME = os.environ.get("AWS_BUCKET_NAME", "schema-engine-bucket-1")
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-2")
+
+s3_client = boto3.client(
+    's3',
+    region_name=AWS_REGION,
+    aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY")
+)
+
 # DELAYED IMPORT
 from orchestrator import run_orchestrator
 
-# STORAGE
+# LOCAL STORAGE (Temp)
 UPLOAD_DIR = "vault"
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
@@ -63,7 +75,6 @@ async def login(data: LoginRequest):
     access_token = auth.create_access_token(data={"sub": user["username"]})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# --- NEW: UI BILLING STATUS CHECKER ---
 @app.get("/billing-status")
 async def billing_status(current_user: str = Depends(auth.get_current_user)):
     user = database.get_user(current_user)
@@ -71,7 +82,6 @@ async def billing_status(current_user: str = Depends(auth.get_current_user)):
         return {"has_card": False}
     
     try:
-        # Ask Stripe if this customer has any cards saved
         payment_methods = stripe.PaymentMethod.list(
             customer=user["stripe_customer_id"],
             type="card",
@@ -99,6 +109,14 @@ async def get_quote(file: UploadFile = File(...), current_user: str = Depends(au
     success = run_orchestrator(input_path, output_path)
     if not success:
         raise HTTPException(status_code=500, detail="AI Orchestrator failed.")
+
+    # --- UPLOAD SECURELY TO AMAZON S3 ---
+    try:
+        s3_key = f"output_{job_id}.csv"
+        s3_client.upload_file(output_path, AWS_BUCKET_NAME, s3_key)
+        print(f"AWS S3: Successfully vaulted {s3_key}")
+    except Exception as e:
+        print(f"AWS S3 UPLOAD FAILED: {str(e)}")
 
     preview_data = []
     headers = []
@@ -175,13 +193,10 @@ async def auto_charge(job_id: str, current_user: str = Depends(auth.get_current_
         return {"status": "success"}
         
     except stripe.error.CardError as e:
-        print(f"STRIPE CARD ERROR: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Charge declined: {e.user_message}")
     except stripe.error.StripeError as e:
-        print(f"STRIPE API ERROR: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Stripe configuration error: {str(e)}")
     except Exception as e:
-        print(f"SYSTEM ERROR: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal System Error: {str(e)}")
 
 @app.post("/stripe-webhook")
@@ -221,8 +236,31 @@ async def verify(job_id: str, current_user: str = Depends(auth.get_current_user)
 async def download(job_id: str, current_user: str = Depends(auth.get_current_user)):
     job = database.get_job(job_id)
     if job and job["paid"]:
-        return FileResponse(job["output_path"], filename="shopify_ready_final.csv")
+        try:
+            # Generate a 5-minute self-destructing download link directly from S3
+            s3_key = f"output_{job_id}.csv"
+            presigned_url = s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': AWS_BUCKET_NAME, 'Key': s3_key},
+                ExpiresIn=300
+            )
+            return RedirectResponse(url=presigned_url)
+        except Exception as e:
+            # Emergency fallback
+            if os.path.exists(job["output_path"]):
+                return FileResponse(job["output_path"], filename="shopify_ready_final.csv")
+            raise HTTPException(status_code=404, detail="File missing from AWS Vault.")
+            
     raise HTTPException(status_code=402, detail="Payment required")
+
+# --- AWS DIAGNOSTIC PROBE ---
+@app.get("/test-aws")
+async def test_aws():
+    try:
+        response = s3_client.list_objects_v2(Bucket=AWS_BUCKET_NAME)
+        return {"status": "SUCCESS", "message": "AWS is connected and the vault is open!"}
+    except Exception as e:
+        return {"status": "BLOCKED", "exact_aws_error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
