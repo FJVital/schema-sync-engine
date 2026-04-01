@@ -6,6 +6,7 @@ import boto3
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import List
 
@@ -24,7 +25,6 @@ app.add_middleware(
 )
 
 # --- 2. GLOBAL PREFLIGHT CATCHER ---
-# This guarantees the server always says "YES" to the browser's security check
 @app.options("/{path:path}")
 async def preflight_handler():
     return Response(status_code=200)
@@ -57,13 +57,9 @@ if not os.path.exists(UPLOAD_DIR):
 async def root(): 
     return {"status": "Schema-Sync Live"}
 
-# --- AUTHENTICATION & AUTO-REGISTER ---
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
+# --- AUTHENTICATION & AUTO-REGISTER (FORM DATA FIX) ---
 @app.post("/token")
-async def login(data: LoginRequest):
+async def login(data: OAuth2PasswordRequestForm = Depends()):
     user = database.get_user(data.username)
     
     # SAFETY NET: Auto-register if Render wiped the database
@@ -94,33 +90,27 @@ async def get_quote(file: UploadFile = File(...), current_user: str = Depends(au
     input_path = os.path.join(UPLOAD_DIR, f"input_{job_id}.csv")
     output_path = os.path.join(UPLOAD_DIR, f"output_{job_id}.csv")
 
-    # Save uploaded file locally
     with open(input_path, "wb") as f: 
         f.write(await file.read())
     
-    # Count Rows
     row_count = 0
     with open(input_path, "r", encoding='utf-8', errors='ignore') as f:
         reader = csv.reader(f)
         next(reader, None)
         for _ in reader: row_count += 1
 
-    # Run AI Pipeline
     if run_orchestrator(input_path, output_path):
-        # Upload successfully processed file to AWS S3
         try:
             s3_client.upload_file(output_path, AWS_BUCKET_NAME, f"output_{job_id}.csv")
             print(f"AWS S3: Successfully vaulted output_{job_id}.csv")
         except Exception as e: 
             print(f"AWS S3 UPLOAD FAILED: {e}")
     else:
-        raise HTTPException(status_code=500, detail="AI Orchestrator failed to process file.")
+        raise HTTPException(status_code=500, detail="AI Orchestrator failed.")
     
-    # Calculate Price & Record Job
     total_price = max(5.00, row_count * 0.01111)
     database.create_job(job_id, current_user, input_path, output_path, int(total_price * 100))
 
-    # Generate Preview Data
     preview_data = []
     headers = []
     with open(output_path, "r", encoding='utf-8', errors='ignore') as f:
@@ -130,13 +120,7 @@ async def get_quote(file: UploadFile = File(...), current_user: str = Depends(au
             if i < 20: preview_data.append(row)
             else: break
     
-    return {
-        "job_id": job_id, 
-        "rows": row_count, 
-        "price": total_price, 
-        "headers": headers, 
-        "preview": preview_data
-    }
+    return {"job_id": job_id, "rows": row_count, "price": total_price, "headers": headers, "preview": preview_data}
 
 # --- PAYMENT PROCESSING ---
 @app.post("/checkout/{job_id}")
@@ -169,7 +153,6 @@ async def auto_charge(job_id: str, current_user: str = Depends(auth.get_current_
 # --- SECURE DOWNLOAD ---
 @app.get("/download/{job_id}")
 async def download(job_id: str, token: str = None):
-    # Check token from URL query string
     user = auth.get_user_from_token(token)
     if not user: 
         raise HTTPException(status_code=401, detail="Unauthorized token.")
@@ -178,39 +161,21 @@ async def download(job_id: str, token: str = None):
     if job and job["paid"]:
         try:
             s3_key = f"output_{job_id}.csv"
-            # Generate link that forces a 'Download' behavior in the browser
-            presigned_url = s3_client.generate_presigned_url(
-                'get_object',
-                Params={
-                    'Bucket': AWS_BUCKET_NAME, 
-                    'Key': s3_key,
-                    'ResponseContentDisposition': f'attachment; filename="schema_sync_{job_id}.csv"'
-                }, 
-                ExpiresIn=300
-            )
+            presigned_url = s3_client.generate_presigned_url('get_object',
+                Params={'Bucket': AWS_BUCKET_NAME, 'Key': s3_key, 'ResponseContentDisposition': f'attachment; filename="schema_sync_{job_id}.csv"'}, 
+                ExpiresIn=300)
             return RedirectResponse(url=presigned_url)
         except Exception as e:
-            print(f"Presigned URL Error: {e}")
-            # Fallback to local if AWS fails
             if os.path.exists(job["output_path"]):
                 return FileResponse(job["output_path"], filename=f"schema_sync_fallback_{job_id}.csv")
             
-    raise HTTPException(status_code=402, detail="Payment required or file missing.")
+    raise HTTPException(status_code=402, detail="Payment required.")
 
 # --- DASHBOARD HISTORY ---
 @app.get("/my-history")
 async def my_history(current_user: str = Depends(auth.get_current_user)):
     history = database.get_user_history(current_user)
     return {"history": history}
-
-# --- AWS DIAGNOSTIC PROBE ---
-@app.get("/test-aws")
-async def test_aws():
-    try:
-        s3_client.list_objects_v2(Bucket=AWS_BUCKET_NAME)
-        return {"status": "SUCCESS", "message": "AWS is connected and the vault is open!"}
-    except Exception as e: 
-        return {"status": "BLOCKED", "error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn

@@ -93,22 +93,25 @@
     </div>
 
     <script>
-        // --- CONFIGURATION ---
         const API_BASE_URL = "https://schema-sync-engine.onrender.com";
         let currentJobId = null;
 
-        // --- AUTHENTICATION ---
+        // --- AUTHENTICATION (FORM DATA FIX) ---
         async function login() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             
-            console.log("DEBUG: Attempting login for", user);
+            console.log("DEBUG: Attempting Form Data login for", user);
+
+            // Using URLSearchParams acts as a standard web form, bypassing CORS preflight
+            const formData = new URLSearchParams();
+            formData.append("username", user);
+            formData.append("password", pass);
 
             try {
                 const res = await fetch(`${API_BASE_URL}/token`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass })
+                    body: formData // Notice no JSON headers are sent!
                 });
 
                 if (res.ok) {
@@ -124,7 +127,7 @@
                 }
             } catch (error) {
                 console.error("DEBUG: Connection Error", error);
-                alert("Cannot reach server. Ensure API_BASE_URL is correct.");
+                alert("Cannot reach server. Check the F12 Console for exact error.");
             }
         }
 
