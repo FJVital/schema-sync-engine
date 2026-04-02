@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schema-Sync Engine | Cloud Vault</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    <script src="https://js.stripe.com/v3/"></script> <style>
         .check-item { opacity: 0; transform: translateY(10px); transition: all 0.5s ease-out; }
         .check-item.visible { opacity: 1; transform: translateY(0); }
     </style>
@@ -73,7 +71,6 @@
                         <h2 id="mock-title" class="text-xl font-black text-gray-800 leading-tight mb-2">Mapped Product Title</h2>
                         <div class="flex items-center gap-3">
                             <span id="mock-price" class="text-2xl font-black text-green-600">$0.00</span>
-                            <span id="mock-compare-price" class="text-sm text-gray-400 line-through hidden">$0.00</span>
                         </div>
                         <button class="mt-4 w-full bg-gray-900 text-white py-3 rounded-lg font-bold text-sm opacity-50 cursor-not-allowed">Add to Cart</button>
                     </div>
@@ -81,14 +78,19 @@
                     <div class="w-full md:w-1/2 space-y-6">
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <h4 class="font-bold text-gray-800 mb-2 border-b pb-2">AI Janitor Receipt</h4>
-                            <ul class="text-sm text-gray-600 space-y-2">
+                            <ul class="text-sm text-gray-600 space-y-2 mb-4">
                                 <li>✨ Processed <span id="receipt-rows" class="font-bold text-blue-600"></span> total rows.</li>
                                 <li>✨ Standardized Shopify Variant structures.</li>
-                                <li>✨ Cleaned HTML bloat & encoding errors.</li>
                                 <li>✨ Vaulted securely to AWS S3.</li>
                             </ul>
+                            
+                            <div class="mt-4 pt-4 border-t">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Payment Details</label>
+                                <div id="card-element" class="p-3 border border-gray-300 rounded-lg bg-white shadow-inner"></div>
+                                <div id="card-errors" class="text-red-500 text-xs mt-2 font-bold"></div>
+                            </div>
                         </div>
-                        <button id="checkout-btn" onclick="checkout()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-lg hover:bg-indigo-700 shadow-xl transition transform hover:scale-105">Confirm Payment & Unlock CSV</button>
+                        <button id="checkout-btn" onclick="checkout()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-lg hover:bg-indigo-700 shadow-xl transition transform hover:scale-105">Pay & Unlock CSV</button>
                     </div>
                 </div>
             </div>
@@ -116,7 +118,6 @@
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -124,7 +125,13 @@
         const API_BASE_URL = "https://schema-sync-engine.onrender.com";
         let currentJobId = null;
 
-        // --- AUTHENTICATION ---
+        // --- STRIPE INITIALIZATION ---
+        // TODO: Replace with your actual Stripe Publishable Key (pk_test_...)
+        const stripe = Stripe('pk_test_YOUR_STRIPE_PUBLISHABLE_KEY'); 
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        let isCardMounted = false;
+
         async function login() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
@@ -134,11 +141,7 @@
             formData.append("password", pass);
 
             try {
-                const res = await fetch(`${API_BASE_URL}/token`, {
-                    method: 'POST',
-                    body: formData
-                });
-
+                const res = await fetch(`${API_BASE_URL}/token`, { method: 'POST', body: formData });
                 if (res.ok) {
                     const data = await res.json();
                     localStorage.setItem('token', data.access_token);
@@ -148,15 +151,10 @@
                     const err = await res.json();
                     alert("Login Failed: " + err.detail);
                 }
-            } catch (error) {
-                alert("Cannot reach server. Check the F12 Console.");
-            }
+            } catch (error) { alert("Cannot reach server."); }
         }
 
-        function logout() {
-            localStorage.clear();
-            window.location.reload();
-        }
+        function logout() { localStorage.clear(); window.location.reload(); }
 
         function showApp() {
             document.getElementById('login-section').classList.add('hidden');
@@ -166,29 +164,25 @@
             fetchHistory();
         }
 
-        // --- PROCESSING & THE LABOR ILLUSION ---
         const laborIllusionSteps = [
             "Injesting raw supplier CSV data...",
-            "Scrubbing file for 'Ghost Rows' and HTML bloat...",
-            "Zero-shot AI analyzing obscure column headers...",
-            "Standardizing product variant trees (Size, Color)...",
-            "Validating image URLs for Shopify compatibility...",
-            "Vaulting pristine Shopify CSV to secure AWS S3..."
+            "Scrubbing file for 'Ghost Rows'...",
+            "Zero-shot AI analyzing headers...",
+            "Standardizing product variant trees...",
+            "Vaulting pristine CSV to S3..."
         ];
 
         async function processFile() {
             const fileInput = document.getElementById('file-input');
             if (!fileInput.files[0]) return alert("Please select a file.");
 
-            // UI Switch to Labor Illusion
             const btn = document.getElementById('process-btn');
             btn.classList.add('hidden');
             const checklistDiv = document.getElementById('processing-checklist');
             const checklistList = document.getElementById('checklist-list');
             checklistDiv.classList.remove('hidden');
-            checklistList.innerHTML = ''; // clear old
+            checklistList.innerHTML = '';
 
-            // Start animated checklist
             let stepIndex = 0;
             const illusionInterval = setInterval(() => {
                 if(stepIndex < laborIllusionSteps.length) {
@@ -196,37 +190,29 @@
                     li.className = 'check-item text-green-500';
                     li.innerHTML = `✔ ${laborIllusionSteps[stepIndex]}`;
                     checklistList.appendChild(li);
-                    
-                    // Trigger CSS animation
                     setTimeout(() => li.classList.add('visible'), 50);
                     stepIndex++;
                 }
-            }, 1200); // Add a new check every 1.2 seconds
+            }, 1200);
 
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
 
             try {
-                // Actually talk to backend
                 const res = await fetch(`${API_BASE_URL}/quote`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                     body: formData
                 });
-
                 const data = await res.json();
                 currentJobId = data.job_id;
                 
-                // Wait for the illusion animation to finish before showing results
-                const timeElapsed = stepIndex * 1200;
-                const minWaitTime = (laborIllusionSteps.length * 1200) + 500;
-                const remainingWait = Math.max(0, minWaitTime - timeElapsed);
-
+                const minWait = (laborIllusionSteps.length * 1200) + 500;
                 setTimeout(() => {
                     clearInterval(illusionInterval);
                     checklistDiv.classList.add('hidden');
                     renderWYSIWYG(data);
-                }, remainingWait);
+                }, Math.max(0, minWait - (stepIndex * 1200)));
 
             } catch (error) {
                 clearInterval(illusionInterval);
@@ -240,28 +226,18 @@
             document.getElementById('quote-price').innerText = `$${data.price.toFixed(2)}`;
             document.getElementById('receipt-rows').innerText = data.rows.toLocaleString();
             
-            // Extract the first row of data to build the Mockup
             const headers = data.headers.map(h => h.toLowerCase());
-            // Safe fallback finding index of common Shopify columns
             const tIdx = headers.findIndex(h => h.includes('title'));
             const pIdx = headers.findIndex(h => h === 'variant price' || h === 'price');
-            const cIdx = headers.findIndex(h => h.includes('compare at price'));
             const vIdx = headers.findIndex(h => h.includes('vendor') || h.includes('brand'));
             const iIdx = headers.findIndex(h => h.includes('image src'));
 
-            // Use the first preview row that actually has data
             const rowData = data.preview.length > 0 ? data.preview[0] : null;
 
             if(rowData) {
                 document.getElementById('mock-title').innerText = tIdx > -1 && rowData[tIdx] ? rowData[tIdx] : 'Premium Supplier Product';
                 document.getElementById('mock-vendor').innerText = vIdx > -1 && rowData[vIdx] ? rowData[vIdx] : 'MAPPED VENDOR';
                 document.getElementById('mock-price').innerText = pIdx > -1 && rowData[pIdx] ? `$${rowData[pIdx]}` : '$0.00';
-                
-                if(cIdx > -1 && rowData[cIdx]) {
-                    document.getElementById('mock-compare-price').innerText = `$${rowData[cIdx]}`;
-                    document.getElementById('mock-compare-price').classList.remove('hidden');
-                }
-
                 if(iIdx > -1 && rowData[iIdx]) {
                     document.getElementById('mock-image').src = rowData[iIdx];
                     document.getElementById('mock-image').classList.remove('hidden');
@@ -269,27 +245,71 @@
                 }
             }
 
+            // Mount Stripe Card Element
+            if(!isCardMounted) {
+                cardElement.mount('#card-element');
+                isCardMounted = true;
+            }
+
             document.getElementById('preview-section').classList.remove('hidden');
         }
 
+        // --- NEW STRIPE CHECKOUT FLOW ---
         async function checkout() {
-            const res = await fetch(`${API_BASE_URL}/checkout/${currentJobId}`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            });
+            const btn = document.getElementById('checkout-btn');
+            const errorDiv = document.getElementById('card-errors');
+            btn.innerText = "Processing Secure Payment...";
+            btn.disabled = true;
+            errorDiv.innerText = "";
 
-            if (res.ok) {
-                document.getElementById('preview-section').classList.add('hidden');
-                document.getElementById('success-section').classList.remove('hidden');
-                fetchHistory();
-            } else {
-                alert("Checkout failed.");
+            try {
+                // 1. Get Payment Intent from Backend
+                const intentRes = await fetch(`${API_BASE_URL}/create-payment-intent/${currentJobId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (!intentRes.ok) throw new Error("Could not initialize payment.");
+                const { client_secret } = await intentRes.json();
+
+                // 2. Confirm card payment securely with Stripe JS
+                const { paymentIntent, error } = await stripe.confirmCardPayment(client_secret, {
+                    payment_method: { card: cardElement }
+                });
+
+                if (error) {
+                    errorDiv.innerText = error.message;
+                    btn.innerText = "Pay & Unlock CSV";
+                    btn.disabled = false;
+                    return;
+                }
+
+                // 3. Verify Payment Success with Backend
+                const verifyRes = await fetch(`${API_BASE_URL}/verify-payment/${currentJobId}`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ payment_intent_id: paymentIntent.id })
+                });
+
+                if (verifyRes.ok) {
+                    document.getElementById('preview-section').classList.add('hidden');
+                    document.getElementById('success-section').classList.remove('hidden');
+                    fetchHistory();
+                } else {
+                    throw new Error("Payment verification failed. Please contact support.");
+                }
+
+            } catch (error) {
+                errorDiv.innerText = error.message;
+                btn.innerText = "Pay & Unlock CSV";
+                btn.disabled = false;
             }
         }
 
         function downloadFile(jobId) {
-            const token = localStorage.getItem('token');
-            window.location.href = `${API_BASE_URL}/download/${jobId}?token=${token}`;
+            window.location.href = `${API_BASE_URL}/download/${jobId}?token=${localStorage.getItem('token')}`;
         }
 
         async function fetchHistory() {

@@ -18,7 +18,7 @@ app = FastAPI()
 # --- 1. HARDENED CORS CONFIGURATION ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://fjvital.github.io"], # Locks it down to your frontend
+    allow_origins=["https://fjvital.github.io"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,31 +44,26 @@ s3_client = boto3.client(
     aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY")
 )
 
-# DELAYED IMPORT TO AVOID CIRCULAR DEPENDENCY
 from orchestrator import run_orchestrator
 
-# LOCAL STORAGE (Temp buffer before AWS)
 UPLOAD_DIR = "vault"
 if not os.path.exists(UPLOAD_DIR): 
     os.makedirs(UPLOAD_DIR)
 
-# HEALTH CHECK
 @app.get("/")
 async def root(): 
     return {"status": "Schema-Sync Live"}
 
-# --- AUTHENTICATION & AUTO-REGISTER (FORM DATA FIX) ---
+# --- AUTHENTICATION & AUTO-REGISTER ---
 @app.post("/token")
 async def login(data: OAuth2PasswordRequestForm = Depends()):
     user = database.get_user(data.username)
     
-    # SAFETY NET: Auto-register if Render wiped the database
     if not user:
-        print(f"User {data.username} not found. Auto-registering to bypass Render memory wipe...")
+        print(f"User {data.username} not found. Auto-registering...")
         database.create_user(data.username, auth.get_password_hash(data.password))
         user = database.get_user(data.username)
         
-        # Re-create Stripe customer profile
         try:
             customer = stripe.Customer.create(email=user["username"])
             database.update_stripe_customer_id(user["username"], customer.id)
@@ -76,7 +71,6 @@ async def login(data: OAuth2PasswordRequestForm = Depends()):
         except Exception as e:
             print(f"Stripe Error during Auto-Register: {e}")
 
-    # Verify Password
     if not auth.verify_password(data.password, user["hashed_password"]):
         raise HTTPException(status_code=400, detail="Incorrect credentials")
         
@@ -102,7 +96,6 @@ async def get_quote(file: UploadFile = File(...), current_user: str = Depends(au
     if run_orchestrator(input_path, output_path):
         try:
             s3_client.upload_file(output_path, AWS_BUCKET_NAME, f"output_{job_id}.csv")
-            print(f"AWS S3: Successfully vaulted output_{job_id}.csv")
         except Exception as e: 
             print(f"AWS S3 UPLOAD FAILED: {e}")
     else:
@@ -122,9 +115,11 @@ async def get_quote(file: UploadFile = File(...), current_user: str = Depends(au
     
     return {"job_id": job_id, "rows": row_count, "price": total_price, "headers": headers, "preview": preview_data}
 
-# --- PAYMENT PROCESSING ---
-@app.post("/checkout/{job_id}")
-async def auto_charge(job_id: str, current_user: str = Depends(auth.get_current_user)):
+# --- PAYMENT PROCESSING (THE ARCHITECT'S UPGRADE) ---
+
+# STEP 1: Ask Stripe for a secure Payment Intent
+@app.get("/create-payment-intent/{job_id}")
+async def create_payment_intent(job_id: str, current_user: str = Depends(auth.get_current_user)):
     job = database.get_job(job_id)
     user = database.get_user(current_user)
     
@@ -132,21 +127,31 @@ async def auto_charge(job_id: str, current_user: str = Depends(auth.get_current_
         raise HTTPException(status_code=404, detail="Job or User not found.")
         
     try:
-        payment_methods = stripe.PaymentMethod.list(customer=user["stripe_customer_id"], type="card")
-        if not payment_methods.data:
-            raise HTTPException(status_code=400, detail="No card on file.")
-            
         intent = stripe.PaymentIntent.create(
             amount=job["price"],
             currency='usd',
             customer=user["stripe_customer_id"],
-            payment_method=payment_methods.data[0].id,
-            off_session=True,
-            confirm=True,
-            metadata={"job_id": job_id}
         )
-        database.mark_job_paid(job_id)
-        return {"status": "success"}
+        return {"client_secret": intent.client_secret}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+class VerifyRequest(BaseModel):
+    payment_intent_id: str
+
+# STEP 2: Verify the card worked before unlocking the file
+@app.post("/verify-payment/{job_id}")
+async def verify_payment(job_id: str, req: VerifyRequest, current_user: str = Depends(auth.get_current_user)):
+    job = database.get_job(job_id)
+    if not job: raise HTTPException(status_code=404, detail="Job not found")
+
+    try:
+        intent = stripe.PaymentIntent.retrieve(req.payment_intent_id)
+        if intent.status == 'succeeded':
+            database.mark_job_paid(job_id)
+            return {"status": "success"}
+        else:
+            raise HTTPException(status_code=400, detail="Payment failed or incomplete")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -171,7 +176,6 @@ async def download(job_id: str, token: str = None):
             
     raise HTTPException(status_code=402, detail="Payment required.")
 
-# --- DASHBOARD HISTORY ---
 @app.get("/my-history")
 async def my_history(current_user: str = Depends(auth.get_current_user)):
     history = database.get_user_history(current_user)
