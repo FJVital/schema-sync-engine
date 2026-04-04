@@ -11,7 +11,7 @@ def get_db_connection():
 def init_db():
     """Initializes the database and creates tables if they don't exist."""
     conn = get_db_connection()
-    
+
     # Create Users Table
     conn.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -20,23 +20,21 @@ def init_db():
             stripe_customer_id TEXT
         )
     ''')
-    
-    # Create Jobs Table (Updated to include username and created_at for the Dashboard)
+
+    # Create Jobs Table (includes original_filename for branded downloads)
     conn.execute('''
         CREATE TABLE IF NOT EXISTS jobs (
             job_id TEXT PRIMARY KEY,
             username TEXT,
             input_path TEXT,
             output_path TEXT,
+            original_filename TEXT,
             price INTEGER,
             paid BOOLEAN DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
-    # NOTE: The hardcoded seed user was removed. 
-    # This allows fjvital@gmail.com to auto-register cleanly with a fresh password.
-    
+
     conn.commit()
     conn.close()
 
@@ -68,11 +66,11 @@ def update_stripe_customer_id(username: str, customer_id: str):
     return True
 
 # --- JOB FUNCTIONS ---
-def create_job(job_id: str, username: str, input_path: str, output_path: str, price: int):
+def create_job(job_id: str, username: str, input_path: str, output_path: str, price: int, original_filename: str = "file"):
     conn = get_db_connection()
     conn.execute(
-        'INSERT INTO jobs (job_id, username, input_path, output_path, price, paid) VALUES (?, ?, ?, ?, ?, ?)',
-        (job_id, username, input_path, output_path, price, 0)
+        'INSERT INTO jobs (job_id, username, input_path, output_path, original_filename, price, paid) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (job_id, username, input_path, output_path, original_filename, price, 0)
     )
     conn.commit()
     conn.close()
