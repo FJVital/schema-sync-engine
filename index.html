@@ -3,271 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>flashfix.io | The Data Engine</title>
+    <title>Schema-Sync Engine | Cloud Vault</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://js.stripe.com/v3/"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;900&display=swap" rel="stylesheet">
-    
     <style>
-        /* BASE THEME & FONT */
-        body { font-family: 'Inter', sans-serif; }
-        
-        /* THE CARBON FIBER BACKGROUND (CSS Pattern) 
-           To use your own image file, delete the background-image lines below and replace with:
-           background-image: url('YOUR_IMAGE_NAME.png'); background-size: cover; */
-        .bg-carbon {
-            background-color: #111;
-            background-image: 
-                repeating-linear-gradient(45deg, #161616 25%, transparent 25%, transparent 75%, #161616 75%, #161616),
-                repeating-linear-gradient(45deg, #161616 25%, transparent 25%, transparent 75%, #161616 75%, #161616);
-            background-position: 0 0, 10px 10px;
-            background-size: 20px 20px;
-        }
-
-        /* GLASSMORPHISM PANELS */
-        .glass-panel {
-            background: rgba(10, 10, 10, 0.7);
-            backdrop-filter: blur(16px);
-            border: 1px solid #333;
-        }
-
-        /* NEON BUTTON HOVER STATES */
-        .btn-neon { transition: all 0.3s ease; border: 2px solid #4B5563; color: #E5E7EB; background: rgba(0,0,0,0.4); }
-        
-        .btn-neon-green:hover { border-color: #00FF00; color: #00FF00; box-shadow: 0 0 20px rgba(0, 255, 0, 0.3); }
-        .btn-neon-magenta:hover { border-color: #FF00FF; color: #FF00FF; box-shadow: 0 0 20px rgba(255, 0, 255, 0.3); }
-        .btn-neon-cyan:hover { border-color: #00FFFF; color: #00FFFF; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
-
-        /* INPUT FIELDS */
-        .glass-input { background: rgba(255,255,255,0.05); border: 1px solid #4B5563; color: #fff; }
-        .glass-input:focus { outline: none; border-color: #9CA3AF; }
-
-        /* ANIMATIONS */
-        .fade-in { animation: fadeIn 0.5s ease-in forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .check-item { opacity: 0; transform: translateY(10px); transition: all 0.5s ease-out; }
         .check-item.visible { opacity: 1; transform: translateY(0); }
-        .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+
+        /* Progress bar animation */
+        #progress-bar-fill { transition: width 0.3s ease; }
+
+        /* Login spinner */
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-carbon text-gray-300 min-h-screen flex flex-col items-center justify-center p-6">
+<body class="bg-gray-50 font-sans text-gray-900">
 
-    <div class="max-w-4xl w-full">
-        
-        <nav class="w-full flex justify-between items-center mb-12">
-            <h1 class="text-3xl font-black text-white tracking-tight">flashfix.io</h1>
-            <div id="user-status" class="hidden items-center space-x-6">
-                <span id="display-username" class="text-xl font-light text-gray-400"></span>
-                <button onclick="logout()" class="text-xl font-bold text-gray-500 hover:text-white transition">LOGOUT</button>
-            </div>
-        </nav>
-
-        <div id="landing-view" class="fade-in space-y-10">
-            <h1 class="text-3xl font-black text-white leading-tight">Let us fix your Shopify product files, so you can sell more, effortlessly.</h1>
-            <h2 class="text-2xl font-bold text-gray-200">No calls. No manual mapping. No monthly subscriptions, pay as you go.</h2>
-            
-            <p class="text-xl font-light text-gray-400">Drop your supplier or product CSV files, and we will have them clean, organized, and ready to go in 60 seconds. You only pay if you approve the result.</p>
-            
-            <div class="text-xl font-light text-gray-400 space-y-2">
-                <p>Simple, seamless process:</p>
-                <ol class="list-decimal list-inside pl-4">
-                    <li>Upload your file</li>
-                    <li>Preview the first 20 rows, perfectly cleaned, and see your price</li>
-                    <li>Approve and pay if satisfied</li>
-                    <li>Download your polished file</li>
-                </ol>
-            </div>
-
-            <div class="flex flex-col md:flex-row gap-6 mt-8">
-                <button onclick="showForm('login')" class="flex-1 text-2xl font-bold py-5 rounded-lg btn-neon btn-neon-green tracking-widest">LOGIN</button>
-                <button onclick="showForm('register')" class="flex-1 text-2xl font-bold py-5 rounded-lg btn-neon btn-neon-magenta tracking-widest">CREATE ACCOUNT</button>
-                <button onclick="showForm('guest')" class="flex-1 text-2xl font-bold py-5 rounded-lg btn-neon btn-neon-cyan tracking-widest">GO AS GUEST</button>
-            </div>
-
-            <p class="text-xl font-light text-gray-500 mt-12 border-t border-gray-800 pt-6">
-                <strong class="font-bold text-gray-400">Privacy you can trust:</strong> Your file is handled securely and disappears after processing. Nothing is shared or used for AI training. Members with an account get an extra touch: we keep a copy ready for you, always at your fingertips.
-            </p>
+    <nav class="bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm">
+        <h1 class="text-2xl font-bold text-blue-600">Schema-Sync <span class="text-gray-400 font-light">Engine</span></h1>
+        <div id="user-status" class="hidden items-center space-x-4">
+            <span id="display-username" class="text-sm font-medium text-gray-600 italic"></span>
+            <button onclick="logout()" class="text-sm text-red-500 hover:underline">Logout</button>
         </div>
+    </nav>
 
-        <div id="auth-view" class="hidden fade-in glass-panel p-10 rounded-2xl max-w-xl mx-auto">
-            <button onclick="showLanding()" class="text-xl font-bold text-gray-500 hover:text-white mb-8 block tracking-wide">BACK</button>
-            
-            <h2 id="form-title" class="text-3xl font-black text-white mb-8"></h2>
-            
-            <div class="space-y-6">
-                <input type="email" id="email-input" placeholder="EMAIL ADDRESS" class="w-full p-5 text-xl font-light rounded-lg glass-input tracking-wider">
-                <input type="password" id="password-input" placeholder="PASSWORD" class="w-full p-5 text-xl font-light rounded-lg glass-input tracking-wider">
-                
-                <button id="auth-submit-btn" onclick="submitAuth()" class="w-full text-2xl font-bold py-5 mt-4 rounded-lg btn-neon tracking-widest flex justify-center items-center">
-                    CONTINUE
+    <div class="max-w-5xl mx-auto p-8">
+
+        <!-- ===== LOGIN SECTION ===== -->
+        <div id="login-section" class="bg-white p-8 rounded-xl shadow-lg border max-w-md mx-auto mt-10">
+            <h2 class="text-xl font-bold mb-6 text-center text-gray-700">Secure Partner Login</h2>
+            <div class="space-y-4">
+                <input type="text" id="username" placeholder="Username" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 outline-none">
+
+                <!-- Password field: visible by default, toggle to hide -->
+                <div class="relative">
+                    <input type="text" id="password" placeholder="Password"
+                        class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 outline-none pr-12">
+                    <button type="button" onclick="togglePassword()"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
+                        title="Show/hide password">
+                        <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.634 6.634A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.176 5.191M3 3l18 18" />
+                        </svg>
+                    </button>
+                </div>
+
+                <button id="login-btn" onclick="login()"
+                    class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition flex items-center justify-center">
+                    LOGIN
                 </button>
             </div>
-            <p id="guest-note" class="hidden text-xl font-light text-gray-500 mt-6 text-center">A temporary session will be created for this email.</p>
         </div>
 
-        <div id="app-interface" class="hidden fade-in space-y-8">
-            
-            <div class="glass-panel p-10 rounded-2xl text-center">
-                <h3 class="text-3xl font-black text-white mb-8">UPLOAD SUPPLIER DATA</h3>
-                <div id="drop-zone" class="border-2 border-dashed border-gray-600 rounded-xl p-16 hover:border-gray-300 transition cursor-pointer bg-black/30">
-                    <p class="text-2xl font-light text-gray-400">Drag and drop file or <span class="text-white font-bold">Browse</span></p>
+        <!-- ===== APP INTERFACE ===== -->
+        <div id="app-interface" class="hidden space-y-8">
+
+            <!-- Upload Section -->
+            <div class="bg-white p-8 rounded-xl shadow-md border-t-4 border-blue-500">
+                <h3 class="text-lg font-bold mb-4">1. Upload Raw Supplier CSV</h3>
+                <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-blue-400 transition cursor-pointer bg-gray-50">
+                    <p class="text-gray-500">Drag & Drop messy CSV here or <span class="text-blue-500 font-bold underline">Browse</span></p>
                     <input type="file" id="file-input" class="hidden" accept=".csv">
                 </div>
-                <div id="file-info" class="mt-6 hidden text-2xl font-bold text-white"></div>
-                <button id="process-btn" onclick="processFile()" class="mt-8 w-full text-2xl font-bold py-6 rounded-lg btn-neon btn-neon-green tracking-widest">
-                    INITIALIZE ENGINE
-                </button>
+                <div id="file-info" class="mt-4 hidden text-sm font-medium text-blue-600 text-center"></div>
+                <button id="process-btn" onclick="processFile()" class="mt-6 w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 disabled:bg-gray-300 transition">Process & Map Data via AI</button>
 
-                <div id="processing-checklist" class="hidden mt-8 text-left bg-black/40 p-8 rounded-xl">
-                    <p class="text-2xl font-bold text-white mb-4 animate-pulse">PROCESSING DATA PIPELINE</p>
-                    <ul id="checklist-list" class="space-y-3 text-xl font-light text-gray-300"></ul>
-                </div>
-            </div>
+                <!-- Processing Checklist -->
+                <div id="processing-checklist" class="hidden mt-6 bg-gray-900 text-green-400 p-6 rounded-xl font-mono text-sm shadow-inner">
+                    <p class="text-white mb-2 font-bold animate-pulse">Initializing AI Pipeline...</p>
+                    <ul id="checklist-list" class="space-y-2"></ul>
 
-            <div id="preview-section" class="hidden fade-in">
-                <div class="glass-panel rounded-2xl overflow-hidden border-t-4 border-green-500">
-                    
-                    <div class="p-8 border-b border-gray-800 flex justify-between items-center bg-black/50">
-                        <h3 class="text-3xl font-black text-white">PIPELINE COMPLETE</h3>
-                        <p id="quote-price" class="text-3xl font-black text-green-400"></p>
-                    </div>
-
-                    <div class="p-8 overflow-x-auto">
-                        <p class="text-xl font-bold text-gray-500 mb-6 uppercase tracking-widest">DATA PREVIEW (20 ROWS)</p>
-                        <table class="min-w-full text-xl font-light text-gray-300 text-left border border-gray-800 rounded-lg">
-                            <thead id="preview-thead" class="bg-black/60 font-bold text-white uppercase tracking-wider"></thead>
-                            <tbody id="preview-tbody" class="divide-y divide-gray-800"></tbody>
-                        </table>
-                    </div>
-
-                    <div class="p-8 bg-black/40 border-t border-gray-800 flex flex-col md:flex-row gap-8">
-                        <div class="flex-1 space-y-4">
-                            <h4 class="text-2xl font-bold text-white uppercase tracking-wider border-b border-gray-700 pb-2">SYSTEM RECEIPT</h4>
-                            <p class="text-xl font-light text-gray-400">PROCESSED: <span id="receipt-rows" class="text-white font-bold"></span> ROWS</p>
-                            <p class="text-xl font-light text-gray-400">STATUS: SHOPIFY STRUCTURE VALIDATED</p>
-                            <p class="text-xl font-light text-gray-400">STORAGE: AWS S3 VAULT SECURED</p>
+                    <!-- Progress Bar (shown after checklist completes) -->
+                    <div id="progress-bar-container" class="hidden mt-4">
+                        <div class="flex justify-between text-xs text-green-300 mb-1">
+                            <span>File processing</span>
+                            <span id="progress-label">0%</span>
                         </div>
-                        <div class="flex-1">
-                            <div id="card-element" class="p-5 border border-gray-700 rounded-xl bg-black/50 shadow-inner"></div>
-                            <div id="card-errors" class="text-xl font-bold text-red-500 mt-4"></div>
-                            <button id="checkout-btn" onclick="checkout()" class="mt-6 w-full text-2xl font-bold py-5 rounded-lg btn-neon btn-neon-green tracking-widest">
-                                PAY & UNLOCK FILE
-                            </button>
+                        <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="progress-bar-fill" class="bg-green-400 h-3 rounded-full" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="success-section" class="hidden fade-in glass-panel p-12 rounded-2xl text-center border-t-4 border-green-500">
-                <h3 class="text-3xl font-black text-white mb-4">TRANSACTION VERIFIED</h3>
-                <p class="text-2xl font-light text-gray-300 mb-10">File unlocked and ready for Shopify import.</p>
-                <button onclick="downloadFile(currentJobId)" class="w-full md:w-1/2 mx-auto text-2xl font-bold py-6 rounded-lg btn-neon btn-neon-green tracking-widest">
-                    DOWNLOAD CSV
+            <!-- Preview + Payment Section -->
+            <div id="preview-section" class="hidden bg-white rounded-xl shadow-2xl border overflow-hidden">
+
+                <!-- Header: Pipeline Complete + Full File Price -->
+                <div class="bg-indigo-600 p-6 text-white flex justify-between items-center shadow-md">
+                    <div>
+                        <h3 class="font-black text-xl tracking-wide">Pipeline Complete ✅</h3>
+                        <p class="text-sm text-indigo-200">Your messy file is now a pristine Shopify CSV.</p>
+                    </div>
+                    <div class="text-right">
+                        <p id="quote-price" class="text-4xl font-black whitespace-nowrap"></p>
+                    </div>
+                </div>
+
+                <!-- Data Preview Table -->
+                <div class="p-6 border-b overflow-x-auto bg-gray-50">
+                    <p class="text-xs uppercase tracking-widest font-bold text-gray-400 mb-3">First 20 Rows — Mapped Output</p>
+                    <table class="min-w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+                        <thead id="preview-thead" class="bg-indigo-50 text-indigo-700 font-bold"></thead>
+                        <tbody id="preview-tbody" class="divide-y divide-gray-100 bg-white"></tbody>
+                    </table>
+                </div>
+
+                <!-- AI Janitor Receipt + Payment Card -->
+                <div class="p-8 bg-gray-50">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h4 class="font-bold text-gray-800 mb-2 border-b pb-2">AI Janitor Receipt</h4>
+                        <ul class="text-sm text-gray-600 space-y-2 mb-4">
+                            <li>✨ Processed <span id="receipt-rows" class="font-bold text-blue-600"></span> total rows.</li>
+                            <li>✨ Standardized Shopify Variant structures.</li>
+                            <li>✨ Vaulted securely to AWS S3.</li>
+                        </ul>
+                        <div class="mt-4 pt-4 border-t">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Payment Details</label>
+                            <div id="card-element" class="p-3 border border-gray-300 rounded-lg bg-white shadow-inner"></div>
+                            <div id="card-errors" class="text-red-500 text-xs mt-2 font-bold"></div>
+                        </div>
+                    </div>
+                    <button id="checkout-btn" onclick="checkout()"
+                        class="mt-6 w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-lg hover:bg-indigo-700 shadow-xl transition transform hover:scale-105">
+                        Pay & Unlock CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Success Section -->
+            <div id="success-section" class="hidden bg-green-50 border border-green-200 p-8 rounded-2xl text-center shadow-lg">
+                <div class="text-5xl mb-4">✅</div>
+                <h3 class="text-2xl font-black text-green-800 mb-2">Payment Verified</h3>
+                <p class="text-green-700 mb-8 font-medium">Your Shopify CSV is unlocked and ready to import.</p>
+                <button onclick="downloadFile(currentJobId)"
+                    class="w-full md:w-1/2 mx-auto bg-green-600 text-white py-4 rounded-xl font-black text-lg hover:bg-green-700 shadow-lg transition transform hover:scale-105">
+                    Download CSV Now
                 </button>
             </div>
 
-            <div class="glass-panel p-8 rounded-2xl">
-                <h3 class="text-2xl font-bold text-white mb-6 uppercase tracking-widest">CLOUD VAULT HISTORY</h3>
-                <table class="w-full text-xl font-light text-left text-gray-400">
-                    <thead class="text-gray-500 font-bold uppercase border-b border-gray-700">
-                        <tr><th class="pb-4">DATE</th><th class="pb-4">JOB ID</th><th class="pb-4 text-center">STATUS</th><th class="pb-4 text-right">ACTION</th></tr>
-                    </thead>
-                    <tbody id="history-body" class="divide-y divide-gray-800"></tbody>
-                </table>
+            <!-- Cloud Vault History -->
+            <div class="bg-white p-8 rounded-xl shadow-md border">
+                <h3 class="text-lg font-bold mb-4">Cloud Vault History</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-gray-400 uppercase text-xs border-b">
+                            <tr>
+                                <th class="pb-3">Date</th>
+                                <th class="pb-3">Job ID</th>
+                                <th class="pb-3 text-center">Status</th>
+                                <th class="pb-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body" class="divide-y"></tbody>
+                    </table>
+                </div>
             </div>
-
         </div>
     </div>
 
     <script>
         const API_BASE_URL = "https://schema-sync-engine.onrender.com";
         let currentJobId = null;
-        let currentAuthMode = 'login'; // 'login', 'register', 'guest'
 
-        // --- STRIPE INITIALIZATION (Dark Theme Applied) ---
-        // REPLACE THIS KEY BEFORE DEPLOYING!
-        const stripe = Stripe('pk_test_51TEdyqEeHDzcsEkxbeF7GwPUDv6PPRdIfvfs0h8fwnAV1WMBwWSJPlC1P9MpNNJcHPuzwevYVYeLMfxNLTqD5HGv00GIHadXpy'); 
-        
-        const elements = stripe.elements({
-            appearance: {
-                theme: 'night',
-                variables: {
-                    fontFamily: 'Inter, sans-serif',
-                    colorBackground: '#111111',
-                    colorText: '#ffffff',
-                    colorDanger: '#ef4444',
-                    spacingGridRow: '18px'
-                }
-            }
-        });
+        // --- STRIPE INITIALIZATION ---
+        const stripe = Stripe('pk_test_51TEdyqEeHDzcsEkxbeF7GwPUDv6PPRdIfvfs0h8fwnAV1WMBwWSJPlC1P9MpNNJcHPuzwevYVYeLMfxNLTqD5HGv00GIHadXpy');
+        const elements = stripe.elements();
         const cardElement = elements.create('card');
         let isCardMounted = false;
 
-        // --- VIEW ROUTING ---
-        function showLanding() {
-            document.getElementById('landing-view').classList.remove('hidden');
-            document.getElementById('auth-view').classList.add('hidden');
-        }
-
-        function showForm(mode) {
-            document.getElementById('landing-view').classList.add('hidden');
-            document.getElementById('auth-view').classList.remove('hidden');
-            
-            const title = document.getElementById('form-title');
-            const passInput = document.getElementById('password-input');
-            const btn = document.getElementById('auth-submit-btn');
-            const note = document.getElementById('guest-note');
-            
-            currentAuthMode = mode;
-            
-            // Reset classes
-            btn.className = "w-full text-2xl font-bold py-5 mt-4 rounded-lg btn-neon tracking-widest flex justify-center items-center";
-            
-            if(mode === 'login') {
-                title.innerText = "ACCESS WORKSPACE";
-                passInput.classList.remove('hidden');
-                note.classList.add('hidden');
-                btn.classList.add('btn-neon-green');
-            } else if (mode === 'register') {
-                title.innerText = "CREATE ACCOUNT";
-                passInput.classList.remove('hidden');
-                note.classList.add('hidden');
-                btn.classList.add('btn-neon-magenta');
-            } else if (mode === 'guest') {
-                title.innerText = "GUEST ACCESS";
-                passInput.classList.add('hidden'); // Hide password for guest
-                note.classList.remove('hidden');
-                btn.classList.add('btn-neon-cyan');
+        // --- PASSWORD TOGGLE ---
+        // Password starts visible (type=text); clicking the eye hides it (type=password)
+        function togglePassword() {
+            const field = document.getElementById('password');
+            const eyeOn = document.getElementById('eye-icon');
+            const eyeOff = document.getElementById('eye-off-icon');
+            if (field.type === 'text') {
+                field.type = 'password';
+                eyeOn.classList.add('hidden');
+                eyeOff.classList.remove('hidden');
+            } else {
+                field.type = 'text';
+                eyeOn.classList.remove('hidden');
+                eyeOff.classList.add('hidden');
             }
         }
 
-        function showApp() {
-            document.getElementById('landing-view').classList.add('hidden');
-            document.getElementById('auth-view').classList.add('hidden');
-            document.getElementById('app-interface').classList.remove('hidden');
-            document.getElementById('user-status').classList.remove('hidden');
-            document.getElementById('display-username').innerText = localStorage.getItem('username');
-            fetchHistory();
-        }
+        // --- LOGIN ---
+        async function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const btn = document.getElementById('login-btn');
 
-        // --- AUTH LOGIC ---
-        async function submitAuth() {
-            const user = document.getElementById('email-input').value;
-            let pass = document.getElementById('password-input').value;
-            const btn = document.getElementById('auth-submit-btn');
-
-            if (!user) return alert("Email required.");
-            
-            // Auto-assign complex password for guests to bypass requirement
-            if (currentAuthMode === 'guest') {
-                pass = "GuestAutoSecure123!"; 
-            } else if (!pass) {
-                return alert("Password required.");
-            }
-
+            // Show spinner
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span>';
+            btn.innerHTML = '<span class="spinner"></span> Connecting...';
 
             const formData = new URLSearchParams();
             formData.append("username", user);
@@ -282,51 +230,97 @@
                     showApp();
                 } else {
                     const err = await res.json();
-                    alert("Authentication Failed. Check credentials.");
+                    alert("Login Failed: " + err.detail);
                     btn.disabled = false;
-                    btn.innerHTML = 'CONTINUE';
+                    btn.innerHTML = 'LOGIN';
                 }
             } catch (error) {
-                alert("Server unreachable.");
+                alert("Cannot reach server.");
                 btn.disabled = false;
-                btn.innerHTML = 'CONTINUE';
+                btn.innerHTML = 'LOGIN';
             }
         }
 
         function logout() { localStorage.clear(); window.location.reload(); }
 
-        // --- PIPELINE LOGIC ---
+        function showApp() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('app-interface').classList.remove('hidden');
+            document.getElementById('user-status').classList.remove('hidden');
+            document.getElementById('display-username').innerText = localStorage.getItem('username');
+            fetchHistory();
+        }
+
+        // --- CHECKLIST STEPS ---
         const laborIllusionSteps = [
-            "INGESTING RAW DATA...",
-            "PURGING GHOST ROWS...",
-            "AI HEADER ANALYSIS...",
-            "STANDARDIZING SHOPIFY VARIANTS...",
-            "SECURING CLOUD VAULT..."
+            "Injesting raw supplier CSV data...",
+            "Scrubbing file for 'Ghost Rows'...",
+            "Zero-shot AI analyzing headers...",
+            "Standardizing product variant trees...",
+            "Vaulting pristine CSV to S3..."
         ];
 
+        // --- PROGRESS BAR ---
+        function startProgressBar() {
+            const container = document.getElementById('progress-bar-container');
+            const fill = document.getElementById('progress-bar-fill');
+            const label = document.getElementById('progress-label');
+            container.classList.remove('hidden');
+
+            let pct = 0;
+            // Animate from 1% to 94% over ~8 seconds, then hold until API responds
+            const interval = setInterval(() => {
+                if (pct < 94) {
+                    pct += Math.random() * 3 + 1;
+                    pct = Math.min(pct, 94);
+                    fill.style.width = pct.toFixed(0) + '%';
+                    label.innerText = pct.toFixed(0) + '%';
+                }
+            }, 250);
+            return interval;
+        }
+
+        function completeProgressBar(intervalId) {
+            clearInterval(intervalId);
+            const fill = document.getElementById('progress-bar-fill');
+            const label = document.getElementById('progress-label');
+            fill.style.width = '100%';
+            label.innerText = '100%';
+        }
+
+        // --- PROCESS FILE ---
         async function processFile() {
             const fileInput = document.getElementById('file-input');
-            if (!fileInput.files[0]) return alert("Select a file.");
+            if (!fileInput.files[0]) return alert("Please select a file.");
 
-            document.getElementById('process-btn').classList.add('hidden');
+            const btn = document.getElementById('process-btn');
+            btn.classList.add('hidden');
             const checklistDiv = document.getElementById('processing-checklist');
             const checklistList = document.getElementById('checklist-list');
             checklistDiv.classList.remove('hidden');
             checklistList.innerHTML = '';
+            document.getElementById('progress-bar-container').classList.add('hidden');
 
             let stepIndex = 0;
             const illusionInterval = setInterval(() => {
                 if (stepIndex < laborIllusionSteps.length) {
                     const li = document.createElement('li');
-                    li.className = 'check-item text-green-400';
-                    li.innerHTML = `> ${laborIllusionSteps[stepIndex]}`;
+                    li.className = 'check-item text-green-500';
+                    li.innerHTML = `✔ ${laborIllusionSteps[stepIndex]}`;
                     checklistList.appendChild(li);
                     setTimeout(() => li.classList.add('visible'), 50);
                     stepIndex++;
                 } else {
                     clearInterval(illusionInterval);
                 }
-            }, 1000);
+            }, 1200);
+
+            // Start progress bar after checklist finishes
+            const checklistDuration = laborIllusionSteps.length * 1200 + 200;
+            let progressInterval;
+            setTimeout(() => {
+                progressInterval = startProgressBar();
+            }, checklistDuration);
 
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
@@ -340,40 +334,55 @@
                 const data = await res.json();
                 currentJobId = data.job_id;
 
-                const minWait = (laborIllusionSteps.length * 1000) + 500;
+                const minWait = checklistDuration + 500;
                 setTimeout(() => {
                     clearInterval(illusionInterval);
-                    checklistDiv.classList.add('hidden');
-                    renderPreview(data);
+                    if (progressInterval) completeProgressBar(progressInterval);
+
+                    // Short pause at 100% so user sees it
+                    setTimeout(() => {
+                        checklistDiv.classList.add('hidden');
+                        renderPreview(data);
+                    }, 600);
                 }, Math.max(0, minWait - Date.now() % minWait));
 
             } catch (error) {
                 clearInterval(illusionInterval);
-                alert("Processing error.");
-                document.getElementById('process-btn').classList.remove('hidden');
+                if (progressInterval) clearInterval(progressInterval);
+                alert("Error processing file.");
+                btn.classList.remove('hidden');
                 checklistDiv.classList.add('hidden');
             }
         }
 
-        // --- RENDER WIZARD ---
+        // --- RENDER PREVIEW (table + price) ---
         function renderPreview(data) {
-            document.getElementById('quote-price').innerText = `$${data.price.toFixed(2)}`;
+            // Header: "FULL FILE PRICE $XX.XX" on one line
+            document.getElementById('quote-price').innerText = `FULL FILE PRICE  $${data.price.toFixed(2)}`;
             document.getElementById('receipt-rows').innerText = data.rows.toLocaleString();
 
+            // Build preview table
             const thead = document.getElementById('preview-thead');
             const tbody = document.getElementById('preview-tbody');
 
-            thead.innerHTML = '<tr>' + data.headers.map(h => `<th class="px-4 py-3 whitespace-nowrap">${h}</th>`).join('') + '</tr>';
-            tbody.innerHTML = data.preview.map(row => 
-                `<tr class="hover:bg-gray-800 transition">` + 
-                row.map(cell => `<td class="px-4 py-3 border-r border-gray-800 last:border-0">${cell || '<span class="text-gray-600">-</span>'}</td>`).join('') + 
+            thead.innerHTML = '<tr>' + data.headers.map(h =>
+                `<th class="px-3 py-2 text-left whitespace-nowrap border-r border-indigo-100 last:border-0">${h}</th>`
+            ).join('') + '</tr>';
+
+            tbody.innerHTML = data.preview.map((row, i) =>
+                `<tr class="${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">` +
+                row.map(cell =>
+                    `<td class="px-3 py-2 whitespace-nowrap border-r border-gray-100 last:border-0 text-gray-700">${cell || '<span class="text-gray-300">—</span>'}</td>`
+                ).join('') +
                 '</tr>'
             ).join('');
 
+            // Mount Stripe card element
             if (!isCardMounted) {
                 cardElement.mount('#card-element');
                 isCardMounted = true;
             }
+
             document.getElementById('preview-section').classList.remove('hidden');
         }
 
@@ -381,7 +390,7 @@
         async function checkout() {
             const btn = document.getElementById('checkout-btn');
             const errorDiv = document.getElementById('card-errors');
-            btn.innerHTML = '<span class="spinner"></span>';
+            btn.innerText = "Processing Secure Payment...";
             btn.disabled = true;
             errorDiv.innerText = "";
 
@@ -389,7 +398,7 @@
                 const intentRes = await fetch(`${API_BASE_URL}/create-payment-intent/${currentJobId}`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
-                if (!intentRes.ok) throw new Error("Payment init failed.");
+                if (!intentRes.ok) throw new Error("Could not initialize payment.");
                 const { client_secret } = await intentRes.json();
 
                 const { paymentIntent, error } = await stripe.confirmCardPayment(client_secret, {
@@ -398,14 +407,17 @@
 
                 if (error) {
                     errorDiv.innerText = error.message;
-                    btn.innerText = "PAY & UNLOCK FILE";
+                    btn.innerText = "Pay & Unlock CSV";
                     btn.disabled = false;
                     return;
                 }
 
                 const verifyRes = await fetch(`${API_BASE_URL}/verify-payment/${currentJobId}`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ payment_intent_id: paymentIntent.id })
                 });
 
@@ -413,43 +425,53 @@
                     document.getElementById('preview-section').classList.add('hidden');
                     document.getElementById('success-section').classList.remove('hidden');
                     fetchHistory();
-                } else { throw new Error("Verification failed."); }
+                } else {
+                    throw new Error("Payment verification failed. Please contact support.");
+                }
 
             } catch (error) {
                 errorDiv.innerText = error.message;
-                btn.innerText = "PAY & UNLOCK FILE";
+                btn.innerText = "Pay & Unlock CSV";
                 btn.disabled = false;
             }
         }
 
-        function downloadFile(jobId) { window.location.href = `${API_BASE_URL}/download/${jobId}?token=${localStorage.getItem('token')}`; }
+        function downloadFile(jobId) {
+            window.location.href = `${API_BASE_URL}/download/${jobId}?token=${localStorage.getItem('token')}`;
+        }
 
         async function fetchHistory() {
             try {
-                const res = await fetch(`${API_BASE_URL}/my-history`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+                const res = await fetch(`${API_BASE_URL}/my-history`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
                 const data = await res.json();
                 const tbody = document.getElementById('history-body');
                 tbody.innerHTML = data.history.map(job => `
-                    <tr class="hover:bg-gray-800 transition">
-                        <td class="py-5 font-mono">${job.created_at.split(' ')[0]}</td>
-                        <td class="py-5 font-mono text-cyan-400">${job.job_id.substring(0,8)}</td>
-                        <td class="py-5 text-center"><span class="px-3 py-1 border rounded font-bold text-sm tracking-wider ${job.paid ? 'border-green-500 text-green-400' : 'border-gray-500 text-gray-500'}">${job.paid ? 'PAID' : 'PENDING'}</span></td>
-                        <td class="py-5 text-right">${job.paid ? `<button onclick="downloadFile('${job.job_id}')" class="text-white hover:text-green-400 font-bold tracking-widest">DOWNLOAD</button>` : '-'}</td>
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-4 text-xs text-gray-400 font-mono">${job.created_at.split(' ')[0]}</td>
+                        <td class="py-4 font-mono text-xs text-blue-500">${job.job_id.substring(0,8)}...</td>
+                        <td class="py-4 text-center">
+                            <span class="px-2 py-1 rounded text-[10px] font-bold ${job.paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                                ${job.paid ? 'PAID' : 'PENDING'}
+                            </span>
+                        </td>
+                        <td class="py-4 text-right">
+                            ${job.paid ? `<button onclick="downloadFile('${job.job_id}')" class="text-blue-600 hover:underline font-bold">Re-Download</button>` : '-'}
+                        </td>
                     </tr>
                 `).join('');
-            } catch (e) {}
+            } catch (e) { console.error("History fetch error", e); }
         }
 
-        // Dropzone interaction
         const dz = document.getElementById('drop-zone');
         const fi = document.getElementById('file-input');
         dz.onclick = () => fi.click();
         fi.onchange = () => {
-            document.getElementById('file-info').innerText = `SELECTED: ${fi.files[0].name.toUpperCase()}`;
+            document.getElementById('file-info').innerText = `Selected: ${fi.files[0].name}`;
             document.getElementById('file-info').classList.remove('hidden');
         };
 
-        // Auto-login check
         if (localStorage.getItem('token')) showApp();
     </script>
 </body>
