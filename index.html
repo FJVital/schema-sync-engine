@@ -309,7 +309,10 @@
             <div style="font-size:64px; margin-bottom:20px;">✅</div>
             <p class="t1" style="color:#00FF00; margin-bottom:12px;">Payment Verified</p>
             <p class="t3" style="margin-bottom:40px;">Your Shopify CSV is unlocked and ready to import.</p>
-            <button onclick="downloadFile(currentJobId)" class="btn-neon btn-green" style="max-width:320px; margin:0 auto;">Download CSV Now</button>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:14px; max-width:320px; margin:0 auto;">
+                <button onclick="downloadFile(currentJobId)" class="btn-neon btn-green" style="width:100%;">Download CSV Now</button>
+                <button onclick="resetForNewJob()" class="btn-neon btn-cyan" style="width:100%; font-size:20px;">Process Another File</button>
+            </div>
         </div>
 
         <!-- History -->
@@ -354,7 +357,7 @@
         </div>
         <div style="display:flex; flex-direction:column; gap:18px;">
             <p class="t3">If you experience any friction with a file upload, preview generation, payment, or download, our engineering team is here to help.</p>
-            <p class="t3">The most efficient way to reach us is via email at <a href="mailto:support@flashfix.io" style="color:#00FFFF;">support@flashfix.io</a>.</p>
+            <p class="t3">The most efficient way to reach us is via email at <a href="/cdn-cgi/l/email-protection#681b1d1818071a1c280e04091b000e0110460107" style="color:#00FFFF;"><span class="__cf_email__" data-cfemail="463533363629343206202a27352e202f3e682f29">[email&#160;protected]</span></a>.</p>
             <p class="t2" style="font-size:20px; margin-top:4px;">To help us diagnose your issue quickly, please include:</p>
             <ul style="display:flex; flex-direction:column; gap:8px; margin-left:8px;">
                 <li class="t3">· The exact name of your uploaded file</li>
@@ -364,7 +367,7 @@
                 <li class="t3">· Any screenshots or error messages you received</li>
             </ul>
             <p class="t3">Our team typically responds within 1 to 3 business days. If your file failed to process, we will investigate, attempt to resolve the error, or process a refund if necessary.</p>
-            <p class="t3">For security matters, email <a href="mailto:support@flashfix.io" style="color:#00FFFF;">support@flashfix.io</a> with "Security" in the subject line.</p>
+            <p class="t3">For security matters, email <a href="/cdn-cgi/l/email-protection#62111712120d101622040e03110a040b1a4c0b0d" style="color:#00FFFF;"><span class="__cf_email__" data-cfemail="671412171708151327010b06140f010e1f490e08">[email&#160;protected]</span></a> with "Security" in the subject line.</p>
         </div>
     </div>
 </div>
@@ -381,7 +384,7 @@
             <div><p class="t2" style="font-size:20px; margin-bottom:8px;">3. Ephemeral Storage & Wipes</p><p class="t3">Your uploaded files and processed data are stored on a temporary basis. All data is automatically purged from our servers after a limited retention window, generally 72 hours.</p></div>
             <div><p class="t2" style="font-size:20px; margin-bottom:8px;">4. Payment Security</p><p class="t3">All transactions are securely handled by Stripe. We never store your full payment card details on flashfix.io servers.</p></div>
             <div><p class="t2" style="font-size:20px; margin-bottom:8px;">5. Data Sharing</p><p class="t3">We will never sell your data. We only share information with trusted infrastructure providers strictly to operate and secure the service.</p></div>
-            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">6. Security Measures & Your Rights</p><p class="t3">We deploy strict operational safeguards including HTTPS encryption, secure access controls, and automated file destruction protocols. Contact us anytime at <a href="mailto:support@flashfix.io" style="color:#00FFFF;">support@flashfix.io</a>.</p></div>
+            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">6. Security Measures & Your Rights</p><p class="t3">We deploy strict operational safeguards including HTTPS encryption, secure access controls, and automated file destruction protocols. Contact us anytime at <a href="/cdn-cgi/l/email-protection#364543464659444276505a57455e505f4e185f59" style="color:#00FFFF;"><span class="__cf_email__" data-cfemail="2b585e5b5b44595f6b4d474a58434d4253054244">[email&#160;protected]</span></a>.</p></div>
         </div>
     </div>
 </div>
@@ -433,14 +436,14 @@
                     <li class="t3">· The file processed correctly but does not natively fit your internal workflows.</li>
                 </ul>
             </div>
-            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">4. Requesting a Review</p><p class="t3">Email <a href="mailto:support@flashfix.io" style="color:#00FFFF;">support@flashfix.io</a> with your file name, upload time, Job ID, a description of why the file failed, and any screenshots. We aim to review all requests within 1 to 3 business days.</p></div>
+            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">4. Requesting a Review</p><p class="t3">Email <a href="/cdn-cgi/l/email-protection#f2818782829d8086b2949e93819a949b8adc9b9d" style="color:#00FFFF;"><span class="__cf_email__" data-cfemail="c8bbbdb8b8a7babc88aea4a9bba0aea1b0e6a1a7">[email&#160;protected]</span></a> with your file name, upload time, Job ID, a description of why the file failed, and any screenshots. We aim to review all requests within 1 to 3 business days.</p></div>
         </div>
     </div>
 </div>
 
 
 <!-- ===== JAVASCRIPT ===== -->
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     const API_BASE_URL = "https://schema-sync-engine.onrender.com";
     let currentJobId = null;
     let isGuest = false;
@@ -711,6 +714,43 @@
     function openModal(n) { document.getElementById(`modal-${n}`).style.display='flex'; document.body.style.overflow='hidden'; }
     function closeModal(n) { document.getElementById(`modal-${n}`).style.display='none'; document.body.style.overflow=''; }
     function closeModalOutside(e, n) { if (e.target===document.getElementById(`modal-${n}`)) closeModal(n); }
+
+    // === RESET FOR NEW JOB ===
+    function resetForNewJob() {
+        currentJobId = null;
+
+        // Hide result panels
+        document.getElementById('success-section').style.display = 'none';
+        document.getElementById('preview-section').style.display  = 'none';
+
+        // Reset file input and info label
+        const fi = document.getElementById('file-input');
+        fi.value = '';
+        const info = document.getElementById('file-info');
+        info.innerText = '';
+        info.style.display = 'none';
+
+        // Reset checklist + progress bar
+        document.getElementById('checklist-list').innerHTML = '';
+        document.getElementById('processing-checklist').style.display = 'none';
+        document.getElementById('progress-bar-container').style.display = 'none';
+        document.getElementById('progress-bar-fill').style.width = '0%';
+        document.getElementById('progress-label').innerText = '0%';
+
+        // Reset payment button and errors
+        const btn = document.getElementById('checkout-btn');
+        btn.innerHTML = 'Pay & Unlock CSV';
+        btn.disabled = false;
+        document.getElementById('card-errors').innerText = '';
+
+        // Unmount Stripe card so it can be re-mounted fresh on next job
+        cardElement.unmount();
+        isCardMounted = false;
+
+        // Show process button and scroll to top
+        document.getElementById('process-btn').style.display = 'block';
+        window.scrollTo({ top:0, behavior:'smooth' });
+    }
 
     // Drop zone
     const dz = document.getElementById('drop-zone');
