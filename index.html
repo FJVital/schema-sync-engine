@@ -817,7 +817,14 @@
                 headers:{ 'Authorization':`Bearer ${localStorage.getItem('token')}` },
                 body: fd
             });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.detail || `Server error (${res.status}). Please log out and log back in.`);
+            }
+
             const data = await res.json();
+            if (!data.job_id) throw new Error('Invalid server response. Please try again.');
             currentJobId = data.job_id;
 
             setTimeout(() => {
