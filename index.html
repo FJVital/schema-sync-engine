@@ -246,25 +246,23 @@
         .footer-link:hover { color: #4b5563; }
         .divider { color: #d1d5db; margin: 0 8px; }
 
-        /* === SCROLLBAR === */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+        /* === SCROLLBAR — green to match brand === */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #5E8E3E; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4d7533; }
     </style>
 </head>
 <body>
 
 <!-- ============================================================ -->
-<!-- SHARED BANNER (used in all views via JS)                     -->
-<!-- ============================================================ -->
-<div class="site-banner" id="banner-landing">
-    <span class="banner-brand">flashfix<span class="banner-dot">.</span>io</span>
-</div>
-
-
-<!-- ============================================================ -->
 <!-- VIEW 1: LANDING                                              -->
 <!-- ============================================================ -->
 <div id="view-landing" style="min-height:100vh; display:flex; flex-direction:column; background:#f6f5f0;">
+
+    <div class="site-banner">
+        <span class="banner-brand">flashfix<span class="banner-dot">.</span>io</span>
+    </div>
 
     <main style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:52px 24px; max-width:700px; margin:0 auto; width:100%; text-align:center;">
 
@@ -311,7 +309,7 @@
 
     <footer style="padding:20px 48px; text-align:center; border-top:1px solid #e5e7eb; background:#f6f5f0;">
         <p style="margin-bottom:8px; font-size:15px; color:#6b7280;">
-            Questions? Contact us at <a href="mailto:support@flashfix.io" style="color:#1a1a1a; font-weight:600;">support@flashfix.io</a>
+            Questions? Contact us at <a href="/cdn-cgi/l/email-protection#bccfc9ccccd3cec8fcdad0ddcfd4dad5c492d5d3" style="color:#1a1a1a; font-weight:600;"><span class="__cf_email__" data-cfemail="83f0f6f3f3ecf1f7c3e5efe2f0ebe5eafbadeaec">[email&#160;protected]</span></a>
         </p>
         <p>
             <span style="color:#9ca3af; font-size:15px;">© 2026 flashfix.io</span>
@@ -386,7 +384,7 @@
             <div id="drop-zone" class="drop-zone" style="padding:52px 24px; text-align:center;">
                 <p style="font-size:20px; font-weight:600; color:#1a1a1a; margin-bottom:8px;">Drag & Drop your CSV here</p>
                 <p style="font-size:20px; color:#9ca3af;">or <span id="browse-link" style="color:#5E8E3E; cursor:pointer; font-weight:700; text-decoration:underline;">browse files</span></p>
-                <p style="font-size:14px; color:#9ca3af; margin-top:10px;">Maximum file size: 50 MB</p>
+                <p style="font-size:17px; color:#9ca3af; margin-top:10px; font-weight:500;">Maximum file size: 50 MB</p>
                 <input type="file" id="file-input" style="display:none;" accept=".csv">
             </div>
 
@@ -395,10 +393,7 @@
                 <div style="width:36px; height:36px; background:#dcfce7; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#5E8E3E" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 </div>
-                <div style="text-align:center; flex:1;">
-                    <p style="font-size:13px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.08em;">Uploaded File</p>
-                    <p id="file-info-name" style="font-size:18px; font-weight:900; color:#5E8E3E; text-transform:uppercase; letter-spacing:.03em;"></p>
-                </div>
+                <p id="file-info-name" style="font-size:20px; font-weight:700; color:#5E8E3E; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></p>
             </div>
 
             <button id="process-btn" onclick="processFile()" class="btn-action" style="margin-top:16px;">
@@ -509,7 +504,7 @@
 
     <footer style="padding:20px 40px; text-align:center; border-top:1px solid #e5e7eb; background:#f6f5f0;">
         <p style="margin-bottom:6px; font-size:14px; color:#9ca3af;">
-            Questions? Contact us at <a href="mailto:support@flashfix.io" style="color:#4b5563; font-weight:600;">support@flashfix.io</a>
+            Questions? Contact us at <a href="/cdn-cgi/l/email-protection#7e0d0b0e0e110c0a3e18121f0d16181706501711" style="color:#4b5563; font-weight:600;"><span class="__cf_email__" data-cfemail="770402070718050337111b16041f111e0f591e18">[email&#160;protected]</span></a>
         </p>
         <p>
             <span style="color:#9ca3af; font-size:14px;">© 2026 flashfix.io</span>
@@ -537,7 +532,7 @@
         </div>
         <div style="display:flex; flex-direction:column; gap:18px;">
             <p class="t3">If you experience any friction with a file upload, preview generation, payment, or download, our engineering team is here to help.</p>
-            <p class="t3">Reach us at <a href="mailto:support@flashfix.io" style="color:#5E8E3E; font-weight:600;">support@flashfix.io</a>.</p>
+            <p class="t3">Reach us at <a href="/cdn-cgi/l/email-protection#5c2f292c2c332e281c3a303d2f343a3524723533" style="color:#5E8E3E; font-weight:600;"><span class="__cf_email__" data-cfemail="52212722223d202612343e33213a343b2a7c3b3d">[email&#160;protected]</span></a>.</p>
             <p class="t2" style="font-size:20px;">Please include:</p>
             <ul style="display:flex; flex-direction:column; gap:8px; margin-left:8px;">
                 <li class="t3">· The exact name of your uploaded file</li>
@@ -563,7 +558,7 @@
             <div><p class="t2" style="font-size:20px; margin-bottom:8px;">3. Ephemeral Storage</p><p class="t3">Your uploaded files and processed data are stored on a temporary basis and automatically purged after a retention window of generally 72 hours.</p></div>
             <div><p class="t2" style="font-size:20px; margin-bottom:8px;">4. Payment Security</p><p class="t3">All transactions are handled by Stripe. We never store your full payment card details on flashfix.io servers.</p></div>
             <div><p class="t2" style="font-size:20px; margin-bottom:8px;">5. Data Sharing</p><p class="t3">We will never sell your data. We only share information with trusted infrastructure providers strictly to operate the service.</p></div>
-            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">6. Security & Rights</p><p class="t3">We deploy HTTPS encryption, secure access controls, and automated file destruction. Contact us at <a href="mailto:support@flashfix.io" style="color:#5E8E3E; font-weight:600;">support@flashfix.io</a>.</p></div>
+            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">6. Security & Rights</p><p class="t3">We deploy HTTPS encryption, secure access controls, and automated file destruction. Contact us at <a href="/cdn-cgi/l/email-protection#5f2c2a2f2f302d2b1f39333e2c37393627713630" style="color:#5E8E3E; font-weight:600;"><span class="__cf_email__" data-cfemail="384b4d4848574a4c785e54594b505e5140165157">[email&#160;protected]</span></a>.</p></div>
         </div>
     </div>
 </div>
@@ -614,7 +609,7 @@
                     <li class="t3">· You downloaded the file but no longer need it.</li>
                 </ul>
             </div>
-            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">4. Requesting a Review</p><p class="t3">Email <a href="mailto:support@flashfix.io" style="color:#5E8E3E; font-weight:600;">support@flashfix.io</a> with your file name, upload time, Job ID, and a description of the issue. We review all requests within 1–3 business days.</p></div>
+            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">4. Requesting a Review</p><p class="t3">Email <a href="/cdn-cgi/l/email-protection#5b282e2b2b34292f1b3d373a28333d3223753234" style="color:#5E8E3E; font-weight:600;"><span class="__cf_email__" data-cfemail="562523262639242216303a37253e303f2e783f39">[email&#160;protected]</span></a> with your file name, upload time, Job ID, and a description of the issue. We review all requests within 1–3 business days.</p></div>
         </div>
     </div>
 </div>
@@ -623,7 +618,7 @@
 <!-- ============================================================ -->
 <!-- JAVASCRIPT                                                   -->
 <!-- ============================================================ -->
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     const API_BASE_URL = "https://schema-sync-engine.onrender.com";
     let currentJobId = null;
     let currentFilename = '';
@@ -991,7 +986,7 @@
     fi.addEventListener('change', () => { if (fi.files[0]) showFileInfo(fi.files[0].name); });
 
     function showFileInfo(name) {
-        document.getElementById('file-info-name').innerText = name.toUpperCase();
+        document.getElementById('file-info-name').innerText = '✓  Uploaded File: ' + name;
         document.getElementById('file-info-card').style.display = 'flex';
     }
 
