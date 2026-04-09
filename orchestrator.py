@@ -1,6 +1,7 @@
 import os
 import csv
 import json
+import time
 from google import genai
 
 # INITIALIZE AI CLIENT (new unified SDK)
@@ -17,6 +18,8 @@ def run_orchestrator(input_file, output_file):
     """
     Reads a raw CSV, maps headers to Shopify format using Gemini AI (JSON mode),
     and saves the synchronized version.
+    Primary model: gemini-2.0-flash (stable, high capacity)
+    Fallback model: gemini-2.0-flash-lite (if primary is overloaded)
     """
     if not client:
         print("Orchestrator Error: Gemini client not initialized. GEMINI_API_KEY missing.")
@@ -58,11 +61,36 @@ def run_orchestrator(input_file, output_file):
             f"Do not write any other text."
         )
 
-        # GENERATE MAPPING using new SDK
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt
-        )
+        # MODEL CASCADE: try primary first, fall back on 503/UNAVAILABLE
+        models_to_try = [
+            'gemini-2.0-flash',
+            'gemini-2.0-flash-lite',
+        ]
+
+        response = None
+        last_error = None
+
+        for model_name in models_to_try:
+            try:
+                print(f"[ORCHESTRATOR] Trying model: {model_name}")
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
+                print(f"[ORCHESTRATOR] Success with model: {model_name}")
+                break
+            except Exception as e:
+                last_error = e
+                err_str = str(e)
+                if '503' in err_str or 'UNAVAILABLE' in err_str or 'quota' in err_str.lower():
+                    print(f"[ORCHESTRATOR] {model_name} unavailable, trying next model...")
+                    time.sleep(1)
+                    continue
+                else:
+                    raise e
+
+        if response is None:
+            raise last_error
 
         # PARSE AI JSON RESPONSE SAFELY
         json_text = response.text.strip()
