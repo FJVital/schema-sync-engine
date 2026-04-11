@@ -24,13 +24,17 @@
             --clr-text-muted:     #7a9e8b;
             --clr-border:         #c8e2d4;
             --clr-border-light:   #e2f0e9;
-            --shadow-soft:        0 4px 20px rgba(43,170,114,0.09);
-            --shadow-hover:       0 8px 28px rgba(43,170,114,0.18);
-            --shadow-card:        0 2px 12px rgba(25,46,35,0.07);
-            --radius-xl:          20px;
-            --radius-card:        16px;
-            --radius-btn:         12px;
-            --radius-field:       11px;
+            
+            /* Softer, friendlier shadows and floating effects */
+            --shadow-soft:        0 8px 30px rgba(43,170,114,0.12);
+            --shadow-hover:       0 12px 40px rgba(43,170,114,0.20);
+            --shadow-card:        0 4px 24px rgba(25,46,35,0.06);
+            
+            /* Friendlier, rounded corners */
+            --radius-xl:          24px;
+            --radius-card:        20px;
+            --radius-btn:         99px; /* Pill-shaped buttons */
+            --radius-field:       12px;
             --radius-sm:          8px;
         }
 
@@ -404,9 +408,6 @@
 </head>
 <body>
 
-<!-- ============================================================ -->
-<!-- VIEW 1: LANDING                                              -->
-<!-- ============================================================ -->
 <div id="view-landing" style="min-height:100vh; display:flex; flex-direction:column; background:#f0f7f3;">
 
     <div class="site-banner">
@@ -433,7 +434,6 @@
             <strong style="color:var(--clr-text-head);">You only pay if you approve the result.</strong>
         </p>
 
-        <!-- Steps box -->
         <div style="background:rgba(230,245,238,0.85); border-radius:16px; padding:28px 32px; margin-bottom:40px; width:100%; max-width:520px; text-align:left;">
             <p style="font-size:16px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--clr-text-muted); margin-bottom:20px;">Simple, seamless process</p>
             <div style="display:flex; flex-direction:column; gap:16px;">
@@ -444,7 +444,6 @@
             </div>
         </div>
 
-        <!-- Auth Buttons -->
         <div style="width:100%; max-width:380px; display:flex; flex-direction:column; gap:12px;">
             <button class="btn-auth btn-login" onclick="showAuth('login')">Sign In</button>
             <button class="btn-auth btn-create" onclick="showAuth('create')">Create Free Account</button>
@@ -480,9 +479,6 @@
 </div>
 
 
-<!-- ============================================================ -->
-<!-- VIEW 2: AUTH                                                 -->
-<!-- ============================================================ -->
 <div id="view-auth" style="display:none; min-height:100vh; flex-direction:column; background:#f0f7f3;">
 
     <div class="site-banner">
@@ -519,12 +515,8 @@
 </div>
 
 
-<!-- ============================================================ -->
-<!-- VIEW 3: WORKSPACE                                            -->
-<!-- ============================================================ -->
 <div id="view-workspace" style="display:none; min-height:100vh; flex-direction:column; background:#f0f7f3;">
 
-    <!-- Banner with user info -->
     <div class="site-banner" style="justify-content:space-between; padding-left:32px; padding-right:32px;">
         <div style="width:120px;"></div>
         <div class="banner-brand-wrap">
@@ -541,18 +533,16 @@
 
     <div style="flex:1; max-width:940px; margin:0 auto; width:100%; padding:32px 24px; display:flex; flex-direction:column; gap:24px;">
 
-        <!-- ===== UPLOAD SECTION ===== -->
         <div id="upload-section">
             <h3 style="font-size:26px; font-weight:700; color:var(--clr-text-head); margin-bottom:16px; text-align:center;">Ready to clean your file?</h3>
 
             <div id="drop-zone" class="drop-zone" style="padding:52px 24px; text-align:center;">
-                <p style="font-size:20px; font-weight:600; color:var(--clr-text-head); margin-bottom:8px;">Drop your supplier CSV here</p>
+                <p style="font-size:20px; font-weight:600; color:var(--clr-text-head); margin-bottom:8px;">Drop your messy spreadsheet right here ✨</p>
                 <p style="font-size:20px; color:var(--clr-text-muted);">or <span id="browse-link" style="color:var(--clr-accent); cursor:pointer; font-weight:700; text-decoration:underline;">click to browse your computer</span></p>
                 <p style="font-size:17px; color:var(--clr-text-muted); margin-top:10px; font-weight:500;">CSV files · up to 50 MB</p>
                 <input type="file" id="file-input" style="display:none;" accept=".csv">
             </div>
 
-            <!-- File info card -->
             <div id="file-info-card" style="display:none;" class="file-info-card">
                 <div style="width:36px; height:36px; background:var(--clr-accent-soft); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--clr-accent)" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -561,10 +551,9 @@
             </div>
 
             <button id="process-btn" onclick="processFile()" class="btn-action" style="margin-top:16px;">
-                Clean My File →
+                Make it Shopify-Ready ✨
             </button>
 
-            <!-- Processing checklist -->
             <div id="processing-checklist" style="display:none; margin-top:16px; background:linear-gradient(155deg,#1a3d2a 0%,#0f2a1d 100%); border-radius:16px; padding:28px; box-shadow:0 8px 32px rgba(10,30,18,0.22);">
                 <p style="color:#ffffff; font-weight:700; font-size:18px; margin-bottom:16px; font-family:'Inter',sans-serif;">Hang tight — we're doing the hard part ✦</p>
                 <ul id="checklist-list" style="display:flex; flex-direction:column; gap:10px;"></ul>
@@ -580,10 +569,8 @@
             </div>
         </div>
 
-        <!-- ===== PREVIEW + PAYMENT SECTION ===== -->
         <div id="preview-section" style="display:none;" class="fade-in">
 
-            <!-- Price header -->
             <div class="card" style="padding:20px 28px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                 <div>
                     <p style="font-size:22px; font-weight:900; color:var(--clr-text-head);">Process Complete</p>
@@ -594,7 +581,6 @@
                 </div>
             </div>
 
-            <!-- Data preview table -->
             <div class="card" style="margin-bottom:16px; overflow:hidden;">
                 <div style="padding:16px 24px; border-bottom:1px solid var(--clr-border-light);">
                     <p style="font-size:15px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--clr-text-muted);">First 20 Rows — Mapped Output</p>
@@ -605,7 +591,6 @@
                         <tbody id="preview-tbody"></tbody>
                     </table>
                 </div>
-                <!-- Scroll button at bottom-left -->
                 <div style="padding:10px 16px; border-top:1px solid var(--clr-border-light);">
                     <button class="scroll-btn" onclick="document.getElementById('preview-table-wrap').scrollBy({left:250,behavior:'smooth'})">
                         Scroll →
@@ -613,7 +598,6 @@
                 </div>
             </div>
 
-            <!-- Receipt + Payment -->
             <div class="card" style="padding:28px 32px;">
                 <p class="t2" style="font-size:22px; padding-bottom:14px; margin-bottom:18px; border-bottom:1px solid var(--clr-border-light);">AI flashfix.io Receipt</p>
 
@@ -623,15 +607,14 @@
                     <li id="s3-line" style="font-size:20px; color:var(--clr-text-body); display:none;">✨ Vaulted securely to AWS S3.</li>
                 </ul>
 
-                <!-- Payment area -->
                 <div id="payment-area">
                     <p style="font-size:18px; font-weight:700; color:var(--clr-text-head); margin-bottom:12px;">Payment Details</p>
                     <div id="card-element"></div>
                     <p id="card-errors" style="color:#dc2626; font-size:14px; font-weight:600; min-height:20px; margin-top:8px;"></p>
-                    <button id="checkout-btn" onclick="checkout()" class="btn-pay" style="margin-top:16px;">Get My Shopify File →</button>
+                    <button id="checkout-btn" onclick="checkout()" class="btn-pay" style="margin-top:16px;">Format & Download File</button>
+                    <p style="text-align:center; font-size:14px; color:var(--clr-text-muted); margin-top:12px; font-weight:500;">🔒 Secure, one-time payment. No subscriptions.</p>
                 </div>
 
-                <!-- Success area (in-place) -->
                 <div id="success-area" style="display:none;" class="success-banner fade-in">
                     <div style="font-size:48px; margin-bottom:12px;">✅</div>
                     <p style="font-size:24px; font-weight:900; color:var(--clr-accent); margin-bottom:8px;">Payment Verified</p>
@@ -644,7 +627,6 @@
             </div>
         </div>
 
-        <!-- ===== HISTORY SECTION ===== -->
         <div id="history-section" style="display:none;" class="card">
             <div style="padding:28px 32px;">
                 <h3 class="t2" style="margin-bottom:20px;">Cloud Vault History</h3>
@@ -685,9 +667,6 @@
 </div>
 
 
-<!-- ============================================================ -->
-<!-- MODALS                                                       -->
-<!-- ============================================================ -->
 <div id="modal-support" class="modal-overlay" style="display:none;" onclick="closeModalOutside(event,'support')">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px;">
@@ -779,9 +758,6 @@
 </div>
 
 
-<!-- ============================================================ -->
-<!-- JAVASCRIPT                                                   -->
-<!-- ============================================================ -->
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     const API_BASE_URL = "https://schema-sync-engine.onrender.com";
     let currentJobId = null;
@@ -1055,7 +1031,7 @@
             const { paymentIntent, error } = await stripe.confirmCardPayment(client_secret, {
                 payment_method:{ card:cardElement }
             });
-            if (error) { err.innerText=error.message; btn.innerHTML='Get My Shopify File →'; btn.disabled=false; return; }
+            if (error) { err.innerText=error.message; btn.innerHTML='Format & Download File'; btn.disabled=false; return; }
 
             const vr = await fetch(`${API_BASE_URL}/verify-payment/${currentJobId}`, {
                 method:'POST',
@@ -1069,7 +1045,7 @@
                 document.getElementById('success-area').scrollIntoView({ behavior:'smooth', block:'center' });
                 if (!isGuest) fetchHistory();
             } else { throw new Error('Payment verification failed. Please contact support.'); }
-        } catch(e) { err.innerText=e.message; btn.innerHTML='Get My Shopify File →'; btn.disabled=false; }
+        } catch(e) { err.innerText=e.message; btn.innerHTML='Format & Download File'; btn.disabled=false; }
     }
 
     function downloadFile(jobId) {
@@ -1130,7 +1106,7 @@
         document.getElementById('progress-bar-fill').style.width = '0%';
         document.getElementById('progress-label').innerText = '0%';
         const btn = document.getElementById('checkout-btn');
-        btn.innerHTML = 'Get My Shopify File →'; btn.disabled = false;
+        btn.innerHTML = 'Format & Download File'; btn.disabled = false;
         document.getElementById('card-errors').innerText = '';
         cardElement.unmount(); isCardMounted = false;
         window.scrollTo({ top:0, behavior:'smooth' });
