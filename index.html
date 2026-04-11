@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>flashfix.io | Fix Your Shopify Files in 60 Seconds</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&family=Raleway:ital,wght@1,700;1,900&display=swap" rel="stylesheet">
     <script src="https://js.stripe.com/v3/"></script>
     <style>
@@ -11,29 +12,31 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --clr-bg:             #f0f7f3;
+            /* Sleek Data-Expert Palette */
+            --clr-bg:             #f8fafc;
             --clr-surface:        #ffffff;
-            --clr-accent:         #2baa72;
-            --clr-accent-dark:    #1e8a5a;
-            --clr-accent-deeper:  #156644;
-            --clr-accent-pale:    #e6f5ee;
-            --clr-accent-soft:    #d0eddf;
-            --clr-accent-mid:     #96ccb0;
-            --clr-text-head:      #192e23;
-            --clr-text-body:      #3b5546;
-            --clr-text-muted:     #7a9e8b;
-            --clr-border:         #c8e2d4;
-            --clr-border-light:   #e2f0e9;
+            --clr-accent:         #4f46e5;
+            --clr-accent-dark:    #4338ca;
+            --clr-accent-deeper:  #3730a3;
+            --clr-accent-pale:    #e0e7ff;
+            --clr-accent-soft:    #c7d2fe;
+            --clr-accent-mid:     #a5b4fc;
+            --clr-text-head:      #1f2937;
+            --clr-text-body:      #4b5563;
+            --clr-text-muted:     #94a3b8;
+            --clr-border:         #e2e8f0;
+            --clr-border-light:   #f1f5f9;
+            --clr-red:            #ef4444;
             
-            /* Softer, friendlier shadows and floating effects */
-            --shadow-soft:        0 8px 30px rgba(43,170,114,0.12);
-            --shadow-hover:       0 12px 40px rgba(43,170,114,0.20);
-            --shadow-card:        0 4px 24px rgba(25,46,35,0.06);
+            /* Floating, friendly shadows mapped to the slate theme */
+            --shadow-soft:        0 8px 30px rgba(15, 23, 42, 0.06);
+            --shadow-hover:       0 12px 40px rgba(15, 23, 42, 0.12);
+            --shadow-card:        0 4px 24px rgba(15, 23, 42, 0.04);
             
-            /* Friendlier, rounded corners */
+            /* Modern, friendly rounded corners */
             --radius-xl:          24px;
             --radius-card:        20px;
-            --radius-btn:         99px; /* Pill-shaped buttons */
+            --radius-btn:         99px; /* Highly clickable pill shape */
             --radius-field:       12px;
             --radius-sm:          8px;
         }
@@ -49,47 +52,34 @@
         /* === BANNER === */
         .site-banner {
             width: 100%;
-            background: linear-gradient(135deg, #2baa72 0%, #1a7a52 100%);
-            padding: 14px 0;
+            background: var(--clr-surface);
+            border-bottom: 1px solid var(--clr-border);
+            padding: 16px 0;
             text-align: center;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 18px rgba(43,170,114,0.25);
             position: relative;
-            overflow: hidden;
-        }
-        /* Subtle shimmer — pure CSS, no extra HTML */
-        .site-banner::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.07) 0%, transparent 60%),
-                        radial-gradient(ellipse at 80% 50%, rgba(255,255,255,0.05) 0%, transparent 60%);
-            pointer-events: none;
+            z-index: 10;
         }
         .banner-brand-wrap {
             display: flex;
             align-items: center;
             gap: 10px;
-            position: relative;
-            z-index: 1;
         }
         .banner-icon {
-            color: rgba(255,255,255,0.88);
+            color: var(--clr-accent);
             flex-shrink: 0;
-            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.15));
         }
         .banner-brand {
             font-family: 'Raleway', sans-serif;
             font-style: italic;
             font-weight: 900;
             font-size: 32px;
-            color: #ffffff;
+            color: var(--clr-text-head);
             letter-spacing: -0.01em;
-            text-shadow: 0 1px 8px rgba(0,0,0,0.16);
         }
-        .banner-dot { color: rgba(255,255,255,0.65); }
+        .banner-dot { color: var(--clr-red); }
 
         /* === TYPOGRAPHY === */
         .t1 { font-size: 33px; font-weight: 900; color: var(--clr-text-head); line-height: 1.2; }
@@ -124,24 +114,24 @@
             letter-spacing: 0.02em;
         }
 
-        /* Primary — solid green */
+        /* Primary — solid indigo */
         .btn-primary {
             background: var(--clr-accent);
             border: 2px solid var(--clr-accent);
             color: #ffffff;
             font-size: 20px;
             padding: 16px 32px;
-            box-shadow: 0 4px 16px rgba(43,170,114,0.28);
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.25);
         }
         .btn-primary:hover:not(:disabled) {
             background: var(--clr-accent-dark);
             border-color: var(--clr-accent-dark);
-            box-shadow: 0 7px 22px rgba(43,170,114,0.38);
+            box-shadow: 0 7px 22px rgba(79, 70, 229, 0.35);
             transform: translateY(-1px);
         }
         .btn-primary:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
 
-        /* Outline — ghost green */
+        /* Outline — ghost indigo */
         .btn-outline {
             background: transparent;
             border: 2px solid var(--clr-accent);
@@ -152,7 +142,7 @@
         .btn-outline:hover {
             background: var(--clr-accent);
             color: #fff;
-            box-shadow: 0 5px 16px rgba(43,170,114,0.28);
+            box-shadow: 0 5px 16px rgba(79, 70, 229, 0.25);
             transform: translateY(-1px);
         }
 
@@ -163,7 +153,7 @@
             color: var(--clr-text-head);
             font-size: 18px;
             padding: 17px 32px;
-            box-shadow: 0 2px 10px rgba(43,170,114,0.07);
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
         }
         .btn-login:hover,
         .btn-create:hover,
@@ -171,7 +161,7 @@
             border-color: var(--clr-accent);
             color: var(--clr-accent);
             background: var(--clr-accent-pale);
-            box-shadow: 0 5px 18px rgba(43,170,114,0.14);
+            box-shadow: 0 5px 18px rgba(79, 70, 229, 0.12);
             transform: translateY(-1px);
         }
 
@@ -186,7 +176,7 @@
         .btn-action:hover:not(:disabled) {
             background: var(--clr-accent);
             color: #fff;
-            box-shadow: 0 5px 16px rgba(43,170,114,0.28);
+            box-shadow: 0 5px 16px rgba(79, 70, 229, 0.25);
             transform: translateY(-1px);
         }
         .btn-action:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
@@ -198,12 +188,12 @@
             color: #fff;
             font-size: 20px;
             padding: 16px 32px;
-            box-shadow: 0 5px 20px rgba(43,170,114,0.34);
+            box-shadow: 0 5px 20px rgba(79, 70, 229, 0.30);
         }
         .btn-pay:hover:not(:disabled) {
             background: var(--clr-accent-dark);
             border-color: var(--clr-accent-dark);
-            box-shadow: 0 8px 26px rgba(43,170,114,0.44);
+            box-shadow: 0 8px 26px rgba(79, 70, 229, 0.40);
             transform: translateY(-2px);
         }
         .btn-pay:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
@@ -236,27 +226,27 @@
         .field::placeholder { color: var(--clr-text-muted); }
         .field:focus {
             border-color: var(--clr-accent);
-            box-shadow: 0 0 0 4px rgba(43,170,114,0.14);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
         }
 
-        /* === DROP ZONE — the welcoming magic mat === */
+        /* === DROP ZONE === */
         .drop-zone {
             border: 2.5px dashed var(--clr-accent-mid);
             border-radius: var(--radius-card);
             transition: all 0.22s ease;
             cursor: pointer;
-            background: linear-gradient(160deg, var(--clr-accent-pale) 0%, #f5fbf8 100%);
+            background: linear-gradient(160deg, var(--clr-accent-pale) 0%, var(--clr-surface) 100%);
         }
         .drop-zone:hover {
             border-color: var(--clr-accent);
             background: linear-gradient(160deg, var(--clr-accent-soft) 0%, var(--clr-accent-pale) 100%);
-            box-shadow: 0 0 0 6px rgba(43,170,114,0.09), var(--shadow-soft);
+            box-shadow: 0 0 0 6px rgba(79, 70, 229, 0.08), var(--shadow-soft);
         }
         .drop-zone.dragover {
             border-color: var(--clr-accent-dark);
             border-style: solid;
-            background: linear-gradient(160deg, var(--clr-accent-soft) 0%, #dcf0e7 100%);
-            box-shadow: 0 0 0 8px rgba(43,170,114,0.14), var(--shadow-hover);
+            background: linear-gradient(160deg, var(--clr-accent-soft) 0%, #e0e7ff 100%);
+            box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.12), var(--shadow-hover);
             transform: scale(1.008);
         }
 
@@ -268,7 +258,7 @@
             border-radius: 12px;
             padding: 14px 20px;
             margin-top: 14px;
-            box-shadow: 0 2px 8px rgba(43,170,114,0.08);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
         }
 
         /* === CHECKLIST (processing state) === */
@@ -293,7 +283,7 @@
             color: var(--clr-text-body);
             white-space: nowrap; font-size: 15px;
         }
-        .preview-table tr:nth-child(even) td { background: #f7fbf9; }
+        .preview-table tr:nth-child(even) td { background: var(--clr-bg); }
         .preview-table tr:hover td { background: var(--clr-accent-pale); transition: background 0.12s; }
 
         /* === SCROLL BUTTON === */
@@ -307,14 +297,14 @@
             cursor: pointer; border: none;
             font-family: 'Inter', sans-serif;
             transition: all 0.18s ease;
-            box-shadow: 0 2px 8px rgba(43,170,114,0.22);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.22);
         }
         .scroll-btn:hover {
             background: var(--clr-accent-dark);
-            box-shadow: 0 4px 12px rgba(43,170,114,0.32);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.32);
         }
 
-        /* === STEP NUMBERS (landing how-it-works) === */
+        /* === STEP NUMBERS === */
         .step-num {
             width: 32px; height: 32px;
             background: var(--clr-accent);
@@ -322,7 +312,7 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 14px; font-weight: 700; color: #ffffff;
             flex-shrink: 0; margin-top: 2px;
-            box-shadow: 0 3px 10px rgba(43,170,114,0.30);
+            box-shadow: 0 3px 10px rgba(79, 70, 229, 0.30);
         }
 
         /* === STATUS BADGES === */
@@ -343,7 +333,7 @@
         /* === MODALS === */
         .modal-overlay {
             position: fixed; inset: 0;
-            background: rgba(18,38,28,0.48);
+            background: rgba(15, 23, 34, 0.65);
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
             z-index: 1000;
@@ -352,12 +342,12 @@
         }
         .modal-box {
             background: var(--clr-surface);
-            border: 1.5px solid var(--clr-border-light);
+            border: 1px solid var(--clr-border);
             border-radius: var(--radius-xl);
             max-width: 700px; width: 100%;
             max-height: 85vh; overflow-y: auto;
             padding: 48px;
-            box-shadow: 0 28px 80px rgba(18,38,28,0.20);
+            box-shadow: 0 28px 80px rgba(15, 23, 34, 0.25);
         }
         .modal-box::-webkit-scrollbar { width: 4px; }
         .modal-box::-webkit-scrollbar-thumb { background: var(--clr-accent-mid); border-radius: 2px; }
@@ -373,7 +363,7 @@
 
         /* === SUCCESS BANNER === */
         .success-banner {
-            background: linear-gradient(145deg, var(--clr-accent-pale) 0%, #d5efdf 100%);
+            background: linear-gradient(145deg, var(--clr-accent-pale) 0%, var(--clr-surface) 100%);
             border: 2px solid var(--clr-accent-soft);
             border-radius: var(--radius-card);
             padding: 32px;
@@ -408,7 +398,7 @@
 </head>
 <body>
 
-<div id="view-landing" style="min-height:100vh; display:flex; flex-direction:column; background:#f0f7f3;">
+<div id="view-landing" style="min-height:100vh; display:flex; flex-direction:column; background:var(--clr-bg);">
 
     <div class="site-banner">
         <div class="banner-brand-wrap">
@@ -434,7 +424,7 @@
             <strong style="color:var(--clr-text-head);">You only pay if you approve the result.</strong>
         </p>
 
-        <div style="background:rgba(230,245,238,0.85); border-radius:16px; padding:28px 32px; margin-bottom:40px; width:100%; max-width:520px; text-align:left;">
+        <div style="background:var(--clr-surface); border:1px solid var(--clr-border); border-radius:16px; padding:28px 32px; margin-bottom:40px; width:100%; max-width:520px; text-align:left; box-shadow:var(--shadow-card);">
             <p style="font-size:16px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--clr-text-muted); margin-bottom:20px;">Simple, seamless process</p>
             <div style="display:flex; flex-direction:column; gap:16px;">
                 <div style="display:flex; align-items:flex-start; gap:14px;"><div class="step-num">1</div><p style="font-size:20px; color:var(--clr-text-head); padding-top:3px;">Upload your file</p></div>
@@ -460,9 +450,9 @@
         </p>
     </main>
 
-    <footer style="padding:20px 48px; text-align:center; border-top:1px solid var(--clr-border-light); background:#f0f7f3;">
+    <footer style="padding:20px 48px; text-align:center; border-top:1px solid var(--clr-border); background:var(--clr-bg);">
         <p style="margin-bottom:8px; font-size:15px; color:var(--clr-text-muted);">
-            Questions? Contact us at <a href="/cdn-cgi/l/email-protection#bccfc9ccccd3cec8fcdad0ddcfd4dad5c492d5d3" style="color:var(--clr-text-head); font-weight:600;"><span class="__cf_email__" data-cfemail="83f0f6f3f3ecf1f7c3e5efe2f0ebe5eafbadeaec">[email&#160;protected]</span></a>
+            Questions? Contact us at <a href="mailto:support@flashfix.io" style="color:var(--clr-text-head); font-weight:600;">support@flashfix.io</a>
         </p>
         <p>
             <span style="color:var(--clr-text-muted); font-size:15px;">© 2026 flashfix.io</span>
@@ -479,7 +469,7 @@
 </div>
 
 
-<div id="view-auth" style="display:none; min-height:100vh; flex-direction:column; background:#f0f7f3;">
+<div id="view-auth" style="display:none; min-height:100vh; flex-direction:column; background:var(--clr-bg);">
 
     <div class="site-banner">
         <div class="banner-brand-wrap">
@@ -515,7 +505,7 @@
 </div>
 
 
-<div id="view-workspace" style="display:none; min-height:100vh; flex-direction:column; background:#f0f7f3;">
+<div id="view-workspace" style="display:none; min-height:100vh; flex-direction:column; background:var(--clr-bg);">
 
     <div class="site-banner" style="justify-content:space-between; padding-left:32px; padding-right:32px;">
         <div style="width:120px;"></div>
@@ -526,8 +516,8 @@
             <span class="banner-brand">flashfix<span class="banner-dot">.</span>io</span>
         </div>
         <div style="width:120px; display:flex; align-items:center; justify-content:flex-end; gap:16px;">
-            <span id="display-username" style="font-size:13px; color:rgba(255,255,255,0.8); font-family:'Inter',sans-serif;"></span>
-            <button onclick="logout()" style="color:rgba(255,255,255,0.85); font-size:14px; cursor:pointer; background:none; border:none; font-family:'Inter',sans-serif; font-weight:600; transition:color .15s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.85)'">Logout</button>
+            <span id="display-username" style="font-size:13px; color:var(--clr-text-body); font-family:'Inter',sans-serif;"></span>
+            <button onclick="logout()" style="color:var(--clr-text-head); font-size:14px; cursor:pointer; background:none; border:none; font-family:'Inter',sans-serif; font-weight:600; transition:color .15s;" onmouseover="this.style.color='var(--clr-accent)'" onmouseout="this.style.color='var(--clr-text-head)'">Logout</button>
         </div>
     </div>
 
@@ -554,7 +544,7 @@
                 Make it Shopify-Ready ✨
             </button>
 
-            <div id="processing-checklist" style="display:none; margin-top:16px; background:linear-gradient(155deg,#1a3d2a 0%,#0f2a1d 100%); border-radius:16px; padding:28px; box-shadow:0 8px 32px rgba(10,30,18,0.22);">
+            <div id="processing-checklist" style="display:none; margin-top:16px; background:linear-gradient(155deg, #1f2937 0%, #111827 100%); border-radius:16px; padding:28px; box-shadow:0 8px 32px rgba(15, 23, 34, 0.22);">
                 <p style="color:#ffffff; font-weight:700; font-size:18px; margin-bottom:16px; font-family:'Inter',sans-serif;">Hang tight — we're doing the hard part ✦</p>
                 <ul id="checklist-list" style="display:flex; flex-direction:column; gap:10px;"></ul>
                 <div id="progress-bar-container" style="display:none; margin-top:20px;">
@@ -563,7 +553,7 @@
                         <span id="progress-label" style="font-size:15px; color:#9ca3af; font-family:'Inter',sans-serif;">0%</span>
                     </div>
                     <div style="background:rgba(255,255,255,.1); border-radius:99px; height:6px; overflow:hidden;">
-                        <div id="progress-bar-fill" style="height:6px; border-radius:99px; background:linear-gradient(90deg,#2baa72,#52d19a); width:0%;"></div>
+                        <div id="progress-bar-fill" style="height:6px; border-radius:99px; background:linear-gradient(90deg, var(--clr-accent), #6366f1); width:0%;"></div>
                     </div>
                 </div>
             </div>
@@ -574,7 +564,7 @@
             <div class="card" style="padding:20px 28px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                 <div>
                     <p style="font-size:22px; font-weight:900; color:var(--clr-text-head);">Process Complete</p>
-                    <p id="preview-filename" style="font-size:22px; font-weight:400; color:var(--clr-accent); margin-top:2px;"> is now a pristine Shopify CSV.</p>
+                    <p id="preview-filename" style="font-size:22px; font-weight:400; margin-top:2px;"></p>
                 </div>
                 <div style="text-align:right;">
                     <span style="font-size:18px; font-weight:500; color:var(--clr-text-muted);">FULL FILE PRICE </span><span id="quote-price" style="font-size:22px; font-weight:900; color:var(--clr-accent);"></span>
@@ -648,9 +638,9 @@
 
     </div>
 
-    <footer style="padding:20px 40px; text-align:center; border-top:1px solid var(--clr-border-light); background:#f0f7f3;">
+    <footer style="padding:20px 40px; text-align:center; border-top:1px solid var(--clr-border); background:var(--clr-bg);">
         <p style="margin-bottom:6px; font-size:14px; color:var(--clr-text-muted);">
-            Questions? Contact us at <a href="/cdn-cgi/l/email-protection#7e0d0b0e0e110c0a3e18121f0d16181706501711" style="color:var(--clr-text-body); font-weight:600;"><span class="__cf_email__" data-cfemail="770402070718050337111b16041f111e0f591e18">[email&#160;protected]</span></a>
+            Questions? Contact us at <a href="mailto:support@flashfix.io" style="color:var(--clr-text-head); font-weight:600;">support@flashfix.io</a>
         </p>
         <p>
             <span style="color:var(--clr-text-muted); font-size:14px;">© 2026 flashfix.io</span>
@@ -675,7 +665,7 @@
         </div>
         <div style="display:flex; flex-direction:column; gap:18px;">
             <p class="t3">If you experience any friction with a file upload, preview generation, payment, or download, our engineering team is here to help.</p>
-            <p class="t3">Reach us at <a href="/cdn-cgi/l/email-protection#5c2f292c2c332e281c3a303d2f343a3524723533" style="color:var(--clr-accent); font-weight:600;"><span class="__cf_email__" data-cfemail="52212722223d202612343e33213a343b2a7c3b3d">[email&#160;protected]</span></a>.</p>
+            <p class="t3">Reach us at <a href="mailto:support@flashfix.io" style="color:var(--clr-accent); font-weight:600;">support@flashfix.io</a>.</p>
             <p class="t2" style="font-size:20px;">Please include:</p>
             <ul style="display:flex; flex-direction:column; gap:8px; margin-left:8px;">
                 <li class="t3">· The exact name of your uploaded file</li>
@@ -701,7 +691,7 @@
             <div><p class="t2" style="font-size:20px; margin-bottom:8px;">3. Ephemeral Storage</p><p class="t3">Your uploaded files and processed data are stored on a temporary basis and automatically purged after a retention window of generally 72 hours.</p></div>
             <div><p class="t2" style="font-size:20px; margin-bottom:8px;">4. Payment Security</p><p class="t3">All transactions are handled by Stripe. We never store your full payment card details on flashfix.io servers.</p></div>
             <div><p class="t2" style="font-size:20px; margin-bottom:8px;">5. Data Sharing</p><p class="t3">We will never sell your data. We only share information with trusted infrastructure providers strictly to operate the service.</p></div>
-            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">6. Security & Rights</p><p class="t3">We deploy HTTPS encryption, secure access controls, and automated file destruction. Contact us at <a href="/cdn-cgi/l/email-protection#5f2c2a2f2f302d2b1f39333e2c37393627713630" style="color:var(--clr-accent); font-weight:600;"><span class="__cf_email__" data-cfemail="384b4d4848574a4c785e54594b505e5140165157">[email&#160;protected]</span></a>.</p></div>
+            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">6. Security & Rights</p><p class="t3">We deploy HTTPS encryption, secure access controls, and automated file destruction. Contact us at <a href="mailto:support@flashfix.io" style="color:var(--clr-accent); font-weight:600;">support@flashfix.io</a>.</p></div>
         </div>
     </div>
 </div>
@@ -752,24 +742,24 @@
                     <li class="t3">· You downloaded the file but no longer need it.</li>
                 </ul>
             </div>
-            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">4. Requesting a Review</p><p class="t3">Email <a href="/cdn-cgi/l/email-protection#5b282e2b2b34292f1b3d373a28333d3223753234" style="color:var(--clr-accent); font-weight:600;"><span class="__cf_email__" data-cfemail="562523262639242216303a37253e303f2e783f39">[email&#160;protected]</span></a> with your file name, upload time, Job ID, and a description of the issue. We review all requests within 1–3 business days.</p></div>
+            <div><p class="t2" style="font-size:20px; margin-bottom:8px;">4. Requesting a Review</p><p class="t3">Email <a href="mailto:support@flashfix.io" style="color:var(--clr-accent); font-weight:600;">support@flashfix.io</a> with your file name, upload time, Job ID, and a description of the issue. We review all requests within 1–3 business days.</p></div>
         </div>
     </div>
 </div>
 
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
     const API_BASE_URL = "https://schema-sync-engine.onrender.com";
     let currentJobId = null;
     let currentFilename = '';
     let isGuest = false;
 
-    // === STRIPE ===
-    const stripe = Stripe('pk_live_51TEdygIWmBbgAiSN4pybnsKztS1KVUDiBZhvaHqb6qMa2HiuNlbFPDr578zr0iIuTpKT9x9FWZqXVIi1LzDUJr2X00PL39nOR5');
+    // === STRIPE (Remember to swap this to pk_live_...) ===
+    const stripe = Stripe('pk_test_51TEdyqEeHDzcsEkxbeF7GwPUDv6PPRdIfvfs0h8fwnAV1WMBwWSJPlC1P9MpNNJcHPuzwevYVYeLMfxNLTqD5HGv00GIHadXpy');
     const elements = stripe.elements();
     const cardElement = elements.create('card', {
         style: {
-            base: { color:'#192e23', iconColor:'#7a9e8b', fontFamily:"'Inter',sans-serif", fontSize:'18px', '::placeholder':{ color:'#7a9e8b' } },
+            base: { color:'#1f2937', iconColor:'#94a3b8', fontFamily:"'Inter',sans-serif", fontSize:'18px', '::placeholder':{ color:'#94a3b8' } },
             invalid: { color:'#dc2626', iconColor:'#dc2626' }
         }
     });
@@ -789,8 +779,8 @@
 
     function showAuth(path) {
         const cfg = {
-            login:  { title:'Access Workspace',  sub:'Enter your credentials to continue.',           btnBg:'#2baa72' },
-            create: { title:'Create Account',     sub:'Choose an email and password to get started.', btnBg:'#2baa72' }
+            login:  { title:'Access Workspace',  sub:'Enter your credentials to continue.',           btnBg:'#4f46e5' },
+            create: { title:'Create Account',     sub:'Choose an email and password to get started.', btnBg:'#4f46e5' }
         };
         const c = cfg[path];
         document.getElementById('auth-title').innerText = c.title;
@@ -937,7 +927,7 @@
             if (si < laborIllusionSteps.length) {
                 const li = document.createElement('li');
                 li.className = 'check-item';
-                li.style.cssText = 'color:#52d19a; font-size:17px; font-family:Inter,sans-serif; font-weight:500;';
+                li.style.cssText = 'color:var(--clr-accent); font-size:17px; font-family:Inter,sans-serif; font-weight:500;';
                 li.innerHTML = `✔ ${laborIllusionSteps[si]}`;
                 cl.appendChild(li);
                 setTimeout(() => li.classList.add('visible'), 50);
@@ -992,10 +982,10 @@
         // Price
         document.getElementById('quote-price').innerText = `$${data.price.toFixed(2)}`;
 
-        // Filename in header
+        // Filename in header: Vibrant Indigo dynamic text, Deep Slate fixed text
         const fname = currentFilename || 'Your file';
         document.getElementById('preview-filename').innerHTML =
-            `<span style="color:#2baa72; font-weight:700;">${fname}</span> is now a pristine Shopify CSV.`;
+            `<span style="color:var(--clr-accent); font-weight:700;">${fname}</span> <span style="color:var(--clr-text-head);">is now a pristine Shopify CSV.</span>`;
 
         document.getElementById('receipt-rows').innerText = data.rows.toLocaleString();
 
@@ -1005,7 +995,7 @@
         document.getElementById('preview-thead').innerHTML =
             '<tr>' + data.headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
         document.getElementById('preview-tbody').innerHTML = data.preview.map(row =>
-            '<tr>' + row.map(cell=>`<td>${cell||'<span style="color:#96ccb0;">—</span>'}</td>`).join('') + '</tr>'
+            '<tr>' + row.map(cell=>`<td>${cell||'<span style="color:var(--clr-accent-mid);">—</span>'}</td>`).join('') + '</tr>'
         ).join('');
 
         if (!isCardMounted) { cardElement.mount('#card-element'); isCardMounted=true; }
@@ -1069,7 +1059,7 @@
                     <td style="padding:16px; text-align:center;"><span class="${j.paid?'badge-paid':'badge-pending'}">${j.paid?'PAID':'PENDING'}</span></td>
                     <td style="padding:16px; text-align:right;">
                         ${j.paid
-                            ? `<button onclick="downloadFile('${j.job_id}')" style="color:#2baa72;font-size:16px;font-weight:700;cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Re-Download</button>`
+                            ? `<button onclick="downloadFile('${j.job_id}')" style="color:var(--clr-accent);font-size:16px;font-weight:700;cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Re-Download</button>`
                             : `<button onclick="resumePayment('${j.job_id}')" style="color:#d97706;font-size:16px;font-weight:700;cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Complete Payment</button>`
                         }
                     </td>
@@ -1083,7 +1073,7 @@
         document.getElementById('payment-area').style.display = 'block';
         document.getElementById('success-area').style.display = 'none';
         document.getElementById('quote-price').innerText = '';
-        document.getElementById('preview-filename').innerHTML = 'Resume your payment below.';
+        document.getElementById('preview-filename').innerHTML = '<span style="color:var(--clr-text-head);">Resume your payment below.</span>';
         document.getElementById('receipt-rows').innerText = '—';
         if (!isCardMounted) { cardElement.mount('#card-element'); isCardMounted=true; }
         document.getElementById('preview-section').scrollIntoView({ behavior:'smooth', block:'start' });
