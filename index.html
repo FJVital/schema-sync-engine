@@ -516,7 +516,7 @@
             <span class="banner-brand">flashfix<span class="banner-dot">.</span>io</span>
         </div>
         <div style="width:120px; display:flex; align-items:center; justify-content:flex-end; gap:16px;">
-            <span id="display-username" style="font-size:13px; color:var(--clr-text-body); font-family:'Inter',sans-serif;"></span>
+            <span id="display-username" style="font-size:13px; color: white; font-family:'Inter',sans-serif;"></span>
             <button onclick="logout()" style="color:var(--clr-text-head); font-size:14px; cursor:pointer; background:none; border:none; font-family:'Inter',sans-serif; font-weight:600; transition:color .15s;" onmouseover="this.style.color='var(--clr-accent)'" onmouseout="this.style.color='var(--clr-text-head)'">Logout</button>
         </div>
     </div>
@@ -927,7 +927,7 @@
             if (si < laborIllusionSteps.length) {
                 const li = document.createElement('li');
                 li.className = 'check-item';
-                li.style.cssText = 'color:var(--clr-accent); font-size:17px; font-family:Inter,sans-serif; font-weight:500;';
+                li.style.cssText = 'color:white; font-size:17px; font-family:Inter,sans-serif; font-weight:500;';
                 li.innerHTML = `✔ ${laborIllusionSteps[si]}`;
                 cl.appendChild(li);
                 setTimeout(() => li.classList.add('visible'), 50);
